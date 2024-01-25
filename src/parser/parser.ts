@@ -131,7 +131,7 @@ export const parse = (tokens: Token[], source: string): Node => {
 		)
 	}
 
-	const nextToken = (offset = 1) => {
+	const peekToken = (offset = 1) => {
 		if (index + offset >= tokens.length) {
 			raise(tokens[index], 'Unexpected end of file')
 		}
@@ -156,50 +156,53 @@ export const parse = (tokens: Token[], source: string): Node => {
 		}
 	}
 
-	const parseCode = (insideBlock = false): Node[] => {
+	const isUnaryOperator = (token: Token) =>
+		token.contents && unaryOperators.has(token.contents.toLowerCase())
+
+	const isTernaryOperator = (token: Token) =>
+		token.contents && ternaryOperators.has(token.contents.toLowerCase())
+
+	const isBinaryOperator = (token: Token) =>
+		token.contents && binaryOperators.has(token.contents.toLowerCase())
+
+	const isExpressionSeparator = (token: Token) =>
+		token.type === 'keyword' && token.contents === ';'
+
+	const isEof = (token: Token) => token.type === 'eof'
+
+	const isEndOfBlock = (token: Token) =>
+		token.type === 'keyword' && token.contents === '}'
+
+	/**
+	 * Code: (assignment | expression)*
+	 * Expression: '(' expression ')' | ternary | binary | unary | codeblock | array | literal
+	 * ExpressionWithoutTernary: '(' expression ')' | binary | unary | codeblock | array | literal
+	 * Ternary: ExpressionWithoutTernary (ternaryOperator ExpressionWithoutTernary)*
+	 * Binary: binaryOperator ExpressionWithoutTernary
+	 * Unary: unaryOperator
+	 */
+
+	/**
+	 * Parses a block of code
+	 */
+	const parseCode = (isEnd: (token: Token) => boolean): Node[] => {
 		const body: Node[] = []
 
-		let first = true
-
 		while (true) {
+			// This shouldn't happen, but just in case
 			if (index >= tokens.length) {
 				throw new Error('Token offset out of bounds')
 			}
 
-			const token = tokens[index]
-
-			if (insideBlock) {
-				if (token.type === 'keyword' && token.contents === '}') {
-					break
-				}
-			}
-
-			if (!insideBlock && token.type === 'eof') {
-				break
-			}
-
-			if (!first) {
-				if (token.type !== 'keyword' || token.contents !== ';') {
-					DEBUG && console.log(JSON.stringify(body[body.length - 1], null, 2))
-
-					raise(token, 'Expected ;')
-				}
-
+			// Skip any number of ';'
+			while (isExpressionSeparator(peekToken(0))) {
 				index++
-			} else {
-				first = false
 			}
 
-			const nextToken = tokens[index]
+			const token = peekToken(0)
 
-			if (nextToken.type === 'eof') {
+			if (isEnd(token)) {
 				break
-			}
-
-			if (insideBlock) {
-				if (nextToken.type === 'keyword' && nextToken.contents === '}') {
-					break
-				}
 			}
 
 			const assignment = tryParse(parseAssignment)
@@ -218,8 +221,8 @@ export const parse = (tokens: Token[], source: string): Node => {
 			DEBUG && console.log(JSON.stringify(body[body.length - 1], null, 2))
 
 			raise(
-				tokens[index],
-				`Unexpected token: ${tokens[index].type} ${tokens[index].contents} (insideBlock: ${insideBlock})`
+				peekToken(0),
+				`Unexpected token: ${tokens[index].type} ${tokens[index].contents}`
 			)
 		}
 
@@ -228,13 +231,32 @@ export const parse = (tokens: Token[], source: string): Node => {
 
 	const parseExpression = (): Node => {
 		const expression =
-			//tryParse(parseBrackets) ??
+			tryParse(parseBrackets) ??
 			tryParse(parseTernaryExpression) ??
 			tryParse(parseBinaryExpression) ??
-			tryParse(parseUnaryExpression) ??
 			tryParse(parseCodeBlock) ??
 			tryParse(parseArray) ??
-			tryParse(parseLiteral)
+			tryParse(parseLiteral) ??
+			tryParse(parseUnaryExpression)
+
+		if (!expression) {
+			return raise(
+				tokens[index],
+				`Unexpected token: ${tokens[index].type} ${tokens[index].contents}`
+			)
+		}
+
+		return expression
+	}
+
+	const parseExpressionWithoutTernary = (): Node => {
+		const expression =
+			tryParse(parseBrackets) ??
+			tryParse(parseBinaryExpression) ??
+			tryParse(parseCodeBlock) ??
+			tryParse(parseArray) ??
+			tryParse(parseLiteral) ??
+			tryParse(parseUnaryExpression)
 
 		if (!expression) {
 			return raise(
@@ -250,7 +272,7 @@ export const parse = (tokens: Token[], source: string): Node => {
 		DEBUG &&
 			console.log(tokens[index].type, tokens[index].contents, 'parseBrackets')
 
-		const token = tokens[index]
+		const token = peekToken(0)
 		if (token.type !== 'keyword' || token.contents !== '(') {
 			raise(token, 'Expected (')
 		}
@@ -259,7 +281,7 @@ export const parse = (tokens: Token[], source: string): Node => {
 
 		const expression = parseExpression()
 
-		const last = tokens[index]
+		const last = peekToken(0)
 		if (last.type !== 'keyword' || last.contents !== ')') {
 			raise(last, 'Expected )')
 		}
@@ -268,9 +290,6 @@ export const parse = (tokens: Token[], source: string): Node => {
 
 		return expression
 	}
-
-	const isTernaryOperator = (token: Token) =>
-		token.contents && ternaryOperators.has(token.contents.toLowerCase())
 
 	const parseTernaryExpression = (): Node => {
 		DEBUG &&
@@ -284,14 +303,7 @@ export const parse = (tokens: Token[], source: string): Node => {
 			raise(tokens[index], 'Unexpected end of file')
 		}
 
-		const left =
-			tryParse(parseCodeBlock) ??
-			tryParse(parseArray) ??
-			tryParse(parseLiteral) ??
-			tryParse(parseBrackets) ??
-			tryParse(parseUnaryExpression) ??
-			tryParse(parseBinaryExpression) ??
-			parseTernaryExpression()
+		const left = parseExpressionWithoutTernary()
 
 		const rightChildren = [] as { operator: Token; right: Node }[]
 		while (true) {
@@ -302,13 +314,7 @@ export const parse = (tokens: Token[], source: string): Node => {
 
 			index++
 
-			const token =
-				tryParse(parseBrackets) ??
-				tryParse(parseBinaryExpression) ??
-				tryParse(parseUnaryExpression) ??
-				tryParse(parseCodeBlock) ??
-				tryParse(parseArray) ??
-				tryParse(parseLiteral)
+			const token = parseExpressionWithoutTernary()
 
 			if (!token) {
 				break
@@ -316,12 +322,6 @@ export const parse = (tokens: Token[], source: string): Node => {
 
 			rightChildren.push({ operator, right: token })
 		}
-
-		DEBUG &&
-			console.trace(
-				'parsed ternary expression',
-				JSON.stringify({ left, rightChildren }, null, 2)
-			)
 
 		let result: TernaryExpressionNode | undefined
 		for (const item of rightChildren) {
@@ -338,14 +338,17 @@ export const parse = (tokens: Token[], source: string): Node => {
 		}
 
 		if (!result) {
-			return left
+			return raise(tokens[index], 'Expected ternary expression')
 		}
+
+		DEBUG &&
+			console.trace(
+				'parsed ternary expression',
+				JSON.stringify({ result }, null, 2)
+			)
 
 		return result
 	}
-
-	const isBinaryOperator = (token: Token) =>
-		token.contents && binaryOperators.has(token.contents.toLowerCase())
 
 	const parseBinaryExpression = (): Node => {
 		DEBUG &&
@@ -366,60 +369,7 @@ export const parse = (tokens: Token[], source: string): Node => {
 
 		index++
 
-		/*
-		const rightChildren = [] as { operator: Token; right: Node }[]
-		while (true) {
-			const operator = tokens[index]
-			if (!isBinaryOperator(operator)) {
-				break
-			}
-
-			index++
-
-			const token =
-				tryParse(parseBrackets) ??
-				tryParse(parseUnaryExpression) ??
-				tryParse(parseCodeBlock) ??
-				tryParse(parseArray) ??
-				tryParse(parseLiteral)
-
-			if (!token) {
-				break
-			}
-
-			rightChildren.push({ operator, right: token })
-		}
-
-		let result: BinaryExpressionNode | undefined
-		for (const item of rightChildren) {
-			result = {
-				type: 'binary-expression',
-				operator: item.operator,
-				right: item.right,
-				start: item.operator.position.from,
-				end: item.right.end,
-			}
-		}
-
-		if (!result) {
-			return raise(tokens[index], 'Expected binary operator')
-		}
-
-		DEBUG && console.trace(
-			'parsed binary expression',
-			JSON.stringify({ rightChildren }, null, 2)
-		)
-
-		return result
-		*/
-
-		const right =
-			tryParse(parseBrackets) ??
-			tryParse(parseBinaryExpression) ??
-			tryParse(parseUnaryExpression) ??
-			tryParse(parseCodeBlock) ??
-			tryParse(parseArray) ??
-			parseLiteral()
+		const right = parseExpressionWithoutTernary()
 
 		DEBUG &&
 			console.trace(
@@ -436,9 +386,6 @@ export const parse = (tokens: Token[], source: string): Node => {
 		}
 	}
 
-	const isUnaryOperator = (token: Token) =>
-		token.contents && unaryOperators.has(token.contents.toLowerCase())
-
 	const parseUnaryExpression = (): Node => {
 		DEBUG &&
 			console.log(
@@ -449,35 +396,27 @@ export const parse = (tokens: Token[], source: string): Node => {
 
 		const token = tokens[index]
 
-		if (isNotOperator(token)) {
-			raise(token, 'Expected identifier or keyword')
-		}
-
 		if (isTernaryOperator(token) || isBinaryOperator(token)) {
-			raise(token, 'Expected unary operator or variable')
+			raise(token, 'Expected unary operator')
 		}
 
 		index++
 
-		DEBUG && console.trace('parsed unary expression', { token })
+		DEBUG &&
+			console.trace('parsed unary expression', JSON.stringify(token, null, 2))
 
-		if (isUnaryOperator(token)) {
+		if (!isUnaryOperator(token)) {
 			return {
-				type: 'unary-expression',
-				operator: token,
+				type: 'variable',
+				id: token,
 				start: token.position.from,
 				end: token.position.to,
 			}
 		}
 
-		if (token.type === 'string' || token.type === 'number') {
-			index--
-			return parseLiteral()
-		}
-
 		return {
-			type: 'variable',
-			id: token,
+			type: 'unary-expression',
+			operator: token,
 			start: token.position.from,
 			end: token.position.to,
 		}
@@ -491,10 +430,10 @@ export const parse = (tokens: Token[], source: string): Node => {
 
 		index++
 
-		const body = parseCode(true)
+		const body = parseCode(isEndOfBlock)
 
-		const last = tokens[index]
-		if (last.type !== 'keyword' || last.contents !== '}') {
+		const last = peekToken(0)
+		if (!isEndOfBlock(last)) {
 			raise(last, 'Expected }')
 		}
 
@@ -509,7 +448,7 @@ export const parse = (tokens: Token[], source: string): Node => {
 	}
 
 	const parseArray = (): Node => {
-		const token = tokens[index]
+		const token = peekToken(0)
 		if (token.type !== 'keyword' || token.contents !== '[') {
 			raise(token, 'Expected [')
 		}
@@ -519,9 +458,9 @@ export const parse = (tokens: Token[], source: string): Node => {
 		const elements: Node[] = []
 
 		while (true) {
-			const current = tokens[index]
+			const current = peekToken(0)
 
-			if (current.contents === ']') {
+			if (current.type === 'keyword' && current.contents === ']') {
 				index++
 				break
 			}
@@ -529,14 +468,14 @@ export const parse = (tokens: Token[], source: string): Node => {
 			const element = parseExpression()
 			elements.push(element)
 
-			const next = tokens[index]
+			const next = peekToken(0)
 
-			if (next.contents === ']') {
+			if (next.type === 'keyword' && next.contents === ']') {
 				index++
 				break
 			}
 
-			if (next.type !== 'keyword' || next.contents !== ',') {
+			if (!(next.type === 'keyword' && next.contents === ',')) {
 				DEBUG && console.log(JSON.stringify(element, null, 2))
 
 				raise(next, 'Expected , or ]')
@@ -577,8 +516,8 @@ export const parse = (tokens: Token[], source: string): Node => {
 	const parseAssignment = (): Node => {
 		const token = tokens[index]
 		const isPrivate = token.contents?.toLowerCase() === 'private'
-		const id = isPrivate ? nextToken() : token
-		const next = isPrivate ? nextToken(2) : nextToken()
+		const id = isPrivate ? peekToken(1) : token
+		const next = isPrivate ? peekToken(2) : peekToken(1)
 
 		if (next.type !== 'keyword' || next.contents !== '=') {
 			raise(next, 'Expected declaration')
@@ -596,7 +535,7 @@ export const parse = (tokens: Token[], source: string): Node => {
 		}
 	}
 
-	const body = parseCode()
+	const body = parseCode(isEof)
 
 	return {
 		type: 'script',
