@@ -1,6 +1,7 @@
 //_x select 1 setPos getpos player
-
-[RSTF_MODE_ATTACKERS_SIDE] call RSTF_fnc_indexSide
+random(RSTF_SPAWN_DISTANCE_MAX - RSTF_SPAWN_DISTANCE_MIN);
+//private _distance = RSTF_SPAWN_DISTANCE_MIN + random(RSTF_SPAWN_DISTANCE_MAX - RSTF_SPAWN_DISTANCE_MIN);
+//[RSTF_MODE_ATTACKERS_SIDE] call RSTF_fnc_indexSide
 
 /*
 RSTF_MODE_PUSH_TASK_ATTACKERS = [

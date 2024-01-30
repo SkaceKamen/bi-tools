@@ -69,30 +69,8 @@ export type Node =
 
 export class ParserError extends Error {}
 
-const getOperators = () => {
-	const ternaryOperators = new Set<string>()
-	const binaryOperators = new Set<string>()
-	const unaryOperators = new Set<string>()
-
-	operators.split('\n').forEach((op) => {
-		if (op.startsWith('b:')) {
-			ternaryOperators.add(op.split(' ')[1].toLowerCase())
-		} else if (op.startsWith('u:')) {
-			binaryOperators.add(op.split(' ')[0].replace('u:', '').toLowerCase())
-		} else if (op.startsWith('n:')) {
-			unaryOperators.add(op.replace('n:', '').toLowerCase())
-		}
-	})
-
-	return {
-		ternaryOperators,
-		binaryOperators,
-		unaryOperators,
-	}
-}
-
 export const parse = (tokens: Token[], source: string): Node => {
-	const { ternaryOperators, binaryOperators, unaryOperators } = getOperators()
+	const { ternaryOperators, binaryOperators, unaryOperators } = operators
 
 	let index = 0
 
@@ -222,22 +200,6 @@ export const parse = (tokens: Token[], source: string): Node => {
 	}
 
 	const parseExpression = (): Node => {
-		// Detect prefixed expressions
-		/*
-		const token = peekToken(0)
-		if (token.type === 'keyword' && token.contents === '(') {
-			return parseBrackets()
-		}
-
-		if (token.type === 'keyword' && token.contents === '{') {
-			return parseCodeBlock()
-		}
-
-		if (token.type === 'keyword' && token.contents === '[') {
-			return parseArray()
-		}
-		*/
-
 		const expression =
 			tryParse(parseTernaryExpression) ??
 			tryParse(parseBinaryExpression) ??
@@ -332,12 +294,8 @@ export const parse = (tokens: Token[], source: string): Node => {
 
 			index++
 
+			// No right token for ternary expression is a mistake, throw an error, don't just try
 			const token = parseExpressionWithoutTernary()
-
-			if (!token) {
-				break
-			}
-
 			rightChildren.push({ operator, right: token })
 		}
 

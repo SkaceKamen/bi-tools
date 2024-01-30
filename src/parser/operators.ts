@@ -1,4 +1,6 @@
-export const operators = `
+import { parseOperators } from './parseOperators'
+
+export const operators = parseOperators(`
 t:SCALAR
 t:BOOL
 t:ARRAY
@@ -2974,4 +2976,4 @@ n:customwaypointposition
 n:isstreamfriendlyuienabled
 n:confignull
 n:get3deniconsvisible
-`
+`)

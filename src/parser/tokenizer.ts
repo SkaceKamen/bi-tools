@@ -210,22 +210,6 @@ export const tokenize = (input: string): Token[] => {
 			continue
 		}
 
-		if (char.match(IDENTIFIER_START)) {
-			const start = offset
-			const contents = readIdentifier()
-
-			tokens.push({
-				type: 'identifier',
-				contents,
-				position: {
-					from: start,
-					to: offset,
-				},
-			})
-
-			continue
-		}
-
 		if (
 			offset < input.length - 1 &&
 			char[0] === '/' &&
@@ -265,6 +249,22 @@ export const tokenize = (input: string): Token[] => {
 			})
 
 			offset++
+			continue
+		}
+
+		if (char.match(IDENTIFIER_START)) {
+			const start = offset
+			const contents = readIdentifier()
+
+			tokens.push({
+				type: 'identifier',
+				contents,
+				position: {
+					from: start,
+					to: offset,
+				},
+			})
+
 			continue
 		}
 
