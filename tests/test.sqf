@@ -1,12 +1,58 @@
 //_x select 1 setPos getpos player
 
+[RSTF_MODE_ATTACKERS_SIDE] call RSTF_fnc_indexSide
+
+/*
+RSTF_MODE_PUSH_TASK_ATTACKERS = [
+	[RSTF_MODE_ATTACKERS_SIDE] call RSTF_fnc_indexSide,
+	"CAPTURE" + str(RSTF_MODE_PUSH_POINT_INDEX),
+	["We need to capture this point to advance", "Capture point " + _pointLetter,""],
+	RSTF_POINT,
+	"ASSIGNED",
+	0,
+	true,
+	"attack"
+] call BIS_fnc_taskCreate;
+*/
+
+/*
+0 spawn {
+	if (RSTF_MODE_PUSH_POINT_INDEX == 0) then {
+		sleep 10;
+	};
+
+	private _pointLetter = toString [65 + (RSTF_MODE_PUSH_POINT_INDEX % 26)];
+
+	RSTF_MODE_PUSH_TASK_ATTACKERS = [
+		[RSTF_MODE_ATTACKERS_SIDE] call RSTF_fnc_indexSide,
+		"CAPTURE" + str(RSTF_MODE_PUSH_POINT_INDEX),
+		["We need to capture this point to advance", "Capture point " + _pointLetter,""],
+		RSTF_POINT,
+		"ASSIGNED",
+		0,
+		true,
+		"attack"
+	] call BIS_fnc_taskCreate;
+
+	RSTF_MODE_PUSH_TASK_DEFENDERS = [
+		[RSTF_MODE_DEFENDERS_SIDE] call RSTF_fnc_indexSide,
+		"DEFEND" + str(RSTF_MODE_PUSH_POINT_INDEX),
+		["Defend this point to prevent enemies advance", "Defend point " + _pointLetter,""],
+		RSTF_POINT,
+		"ASSIGNED",
+		0,
+		true,
+		"defend"
+	] call BIS_fnc_taskCreate;
+};
+*/
 
 //if (_index >= 0) then {
 //_a set [_b, (_c select _d) + 1];
 //};
 
 
-{
+/*{
 	if (!isPlayer(_x) && alive(_x) && vehicle(_x) == _x) then {
 		private _distance = _x distance RSTF_POINT;
 		if (_distance > _killDistance) then {
@@ -23,7 +69,7 @@
 		};
 	};
 } foreach units(_x);
-
+*/
 
 
 /*

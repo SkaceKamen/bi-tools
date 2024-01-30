@@ -14,15 +14,14 @@ async function main() {
 	console.time('tokenize')
 	const tokens = tokenize(preprocessed.code)
 	console.timeEnd('tokenize')
-	// await fs.promises.writeFile('tokens.json', JSON.stringify(tokens, null, 2))
+	await fs.promises.writeFile('tokens.json', JSON.stringify(tokens, null, 2))
 
 	console.time('parse')
 	const parsed = parse(tokens, preprocessed.code)
 	console.timeEnd('parse')
-	// await fs.promises.writeFile('parsed.json', JSON.stringify(parsed, null, 2))
+	await fs.promises.writeFile('parsed.json', JSON.stringify(parsed, null, 2))
 
 	//console.log(stringify(parsed))
-
 	console.log(JSON.stringify(lint(parsed, preprocessed.code), null, 2))
 }
 

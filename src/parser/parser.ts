@@ -69,21 +69,6 @@ export type Node =
 
 export class ParserError extends Error {}
 
-const isNotOperator = (token: Token) =>
-	(token.type !== 'identifier' &&
-		token.type !== 'keyword' &&
-		token.type !== 'string' &&
-		token.type !== 'number') ||
-	token.contents === '=' ||
-	token.contents === ';' ||
-	token.contents === ',' ||
-	token.contents === '[' ||
-	token.contents === ']' ||
-	token.contents === '{' ||
-	token.contents === '}' ||
-	token.contents === '(' ||
-	token.contents === ')'
-
 const getOperators = () => {
 	const ternaryOperators = new Set<string>()
 	const binaryOperators = new Set<string>()
@@ -212,26 +197,48 @@ export const parse = (tokens: Token[], source: string): Node => {
 				continue
 			}
 
-			const expression = tryParse(parseExpression)
-			if (expression) {
-				body.push(expression)
-				continue
+			try {
+				const expression = parseExpression()
+				if (expression) {
+					body.push(expression)
+					continue
+				}
+			} catch (err) {
+				DEBUG && console.log(JSON.stringify(body[body.length - 1], null, 2))
+				throw err
 			}
 
+			/*
 			DEBUG && console.log(JSON.stringify(body[body.length - 1], null, 2))
 
 			raise(
 				peekToken(0),
 				`Unexpected token: ${tokens[index].type} ${tokens[index].contents}`
 			)
+			*/
 		}
 
 		return body
 	}
 
 	const parseExpression = (): Node => {
+		// Detect prefixed expressions
+		/*
+		const token = peekToken(0)
+		if (token.type === 'keyword' && token.contents === '(') {
+			return parseBrackets()
+		}
+
+		if (token.type === 'keyword' && token.contents === '{') {
+			return parseCodeBlock()
+		}
+
+		if (token.type === 'keyword' && token.contents === '[') {
+			return parseArray()
+		}
+		*/
+
 		const expression =
-			tryParse(parseBrackets) ??
 			tryParse(parseTernaryExpression) ??
 			tryParse(parseBinaryExpression) ??
 			tryParse(parseCodeBlock) ??
@@ -250,11 +257,22 @@ export const parse = (tokens: Token[], source: string): Node => {
 	}
 
 	const parseExpressionWithoutTernary = (): Node => {
+		// Detect prefixed expressions
+		const token = peekToken(0)
+		if (token.type === 'keyword' && token.contents === '(') {
+			return parseBrackets()
+		}
+
+		if (token.type === 'keyword' && token.contents === '{') {
+			return parseCodeBlock()
+		}
+
+		if (token.type === 'keyword' && token.contents === '[') {
+			return parseArray()
+		}
+
 		const expression =
-			tryParse(parseBrackets) ??
 			tryParse(parseBinaryExpression) ??
-			tryParse(parseCodeBlock) ??
-			tryParse(parseArray) ??
 			tryParse(parseLiteral) ??
 			tryParse(parseUnaryExpression)
 

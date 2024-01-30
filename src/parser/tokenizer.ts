@@ -56,6 +56,8 @@ export const tokenize = (input: string): Token[] => {
 	const tokens = [] as Token[]
 
 	const parseError = (error: string) => {
+		console.log(JSON.stringify(tokens, null, 2))
+
 		const line = input.slice(0, offset).split('\n').length
 		const lastLineIndex = input.slice(0, offset).lastIndexOf('\n')
 		throw new Error(
@@ -75,12 +77,20 @@ export const tokenize = (input: string): Token[] => {
 		}
 	}
 
-	const readString = () => {
+	const readString = (delimiter: string) => {
 		const start = offset
 		offset++
 
-		// TODO: String escaping!
-		while (offset < input.length && input[offset] !== '"') {
+		while (offset < input.length) {
+			if (input[offset] === delimiter) {
+				// Escape sequence is 2*delimiter
+				if (input[offset + 1] === delimiter) {
+					offset++
+				} else {
+					break
+				}
+			}
+
 			offset++
 		}
 
@@ -183,9 +193,9 @@ export const tokenize = (input: string): Token[] => {
 			continue
 		}
 
-		if (char === '"') {
+		if (char === '"' || char === "'") {
 			const start = offset
-			const contents = readString()
+			const contents = readString(char)
 
 			tokens.push({
 				type: 'string',
