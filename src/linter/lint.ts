@@ -15,6 +15,7 @@ export const lint = (node: Node, code: string) => {
 	const issues = [] as {
 		position: { start: number; end: number }
 		message: string
+		rule: string
 	}[]
 
 	const ctx = {
@@ -23,6 +24,7 @@ export const lint = (node: Node, code: string) => {
 		report: (data: {
 			position: { start: number; end: number }
 			message: string
+			rule: string
 		}) => {
 			issues.push(data)
 		},

@@ -21,7 +21,27 @@ async function main() {
 			const preprocessed = preprocess(contents)
 			const tokens = tokenize(preprocessed.code)
 			const parsed = parse(tokens, preprocessed.code)
-			lint(parsed, preprocessed.code)
+			const lintIssues = lint(parsed, preprocessed.code)
+
+			if (lintIssues.length > 0) {
+				console.log(filePath)
+				for (const issue of lintIssues) {
+					const line = contents.split('\n')[issue.position.startLine - 1]
+					const prefix = String(issue.position.startLine).padEnd(4, ' ') + '|'
+					const tabs =
+						line.slice(0, issue.position.startOffset).split('\t').length - 1
+
+					console.log(prefix, line.split('\t').join('  '))
+
+					console.log(
+						' '.repeat(5) +
+							' '.repeat(issue.position.startOffset - tabs + tabs * 2) +
+							'^'.repeat(issue.position.end - issue.position.start)
+					)
+					console.log('   ', issue.message, '(' + issue.rule + ')')
+					console.log('')
+				}
+			}
 		} catch (err) {
 			console.log(filePath)
 			console.error(err)
