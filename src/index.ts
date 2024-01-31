@@ -21,8 +21,12 @@ async function main() {
 	console.timeEnd('parse')
 	await fs.promises.writeFile('parsed.json', JSON.stringify(parsed, null, 2))
 
+	console.time('lint')
+	const linerIssues = lint(parsed, preprocessed.code)
 	//console.log(stringify(parsed))
-	console.log(JSON.stringify(lint(parsed, preprocessed.code), null, 2))
+	console.timeEnd('lint')
+
+	console.log(JSON.stringify(linerIssues.slice(0, 5), null, 2))
 }
 
 main().catch(console.error)

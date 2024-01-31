@@ -12,7 +12,7 @@ export const undefinedVariablesRule = defineRule({
 				ctx.report({
 					rule: 'undefined-variables',
 					message: `Variable "${node.id.contents}" is not defined.`,
-					node,
+					position: { start: node.start, end: node.end },
 				})
 			}
 		}

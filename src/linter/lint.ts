@@ -1,18 +1,22 @@
 import { Node } from '@/parser/parser'
 import { uppercaseGlobalsRule } from './rules/uppercaseGlobalsRule'
 import { undefinedVariablesRule } from './rules/undefinedVariablesRule'
+import { indentationRule } from './rules/indentationRule'
 
 export const lint = (node: Node, code: string) => {
-	const rules = [uppercaseGlobalsRule, undefinedVariablesRule]
+	const rules = [uppercaseGlobalsRule, undefinedVariablesRule, indentationRule]
 	const issues = [] as {
-		node: Node
+		position: { start: number; end: number }
 		message: string
 	}[]
 
 	const ctx = {
 		sourceCode: code,
 		root: node,
-		report: (data: { node: Node; message: string }) => {
+		report: (data: {
+			position: { start: number; end: number }
+			message: string
+		}) => {
 			issues.push(data)
 		},
 	}
@@ -53,5 +57,18 @@ export const lint = (node: Node, code: string) => {
 
 	walk(node)
 
-	return issues
+	return issues.map((issue) => ({
+		...issue,
+		position: {
+			...issue.position,
+			startLine: code.slice(0, issue.position.start).split('\n').length + 1,
+			startOffset:
+				issue.position.start -
+				code.slice(0, issue.position.start).lastIndexOf('\n'),
+			endLine: code.slice(0, issue.position.end).split('\n').length + 1,
+			endOffset:
+				issue.position.end -
+				code.slice(0, issue.position.end).lastIndexOf('\n'),
+		},
+	}))
 }

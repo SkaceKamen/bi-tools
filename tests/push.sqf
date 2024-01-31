@@ -16,7 +16,6 @@ RSTF_MODE_PUSH_POINTS = [];
 RSTF_MODE_PUSH_POINT_INDEX = -1;
 RSTF_MODE_PUSH_TASK_ATTACKERS = "";
 RSTF_MODE_PUSH_TASK_DEFENDERS = "";
-
 RSTF_MODE_DEFENDERS_SIDE = 0;
 RSTF_MODE_ATTACKERS_SIDE = 1;
 
@@ -24,7 +23,7 @@ RSTF_MODE_DISTANCE_KILL_TIMEOUT = 20;
 
 RSTF_MODE_PUSH_NEXT_POINT = {
 	RSTF_MODE_PUSH_POINT_INDEX = RSTF_MODE_PUSH_POINT_INDEX + 1;
-	private _nextPoint = RSTF_MODE_PUSH_POINTS select RSTF_MODE_PUSH_POINT_INDEX;
+	/*private _nextPoint = RSTF_MODE_PUSH_POINTS select RSTF_MODE_PUSH_POINT_INDEX;
 	private _point = _nextPoint#0;
 	private _direction = _nextPoint#1;
 
@@ -316,9 +315,10 @@ RSTF_MODE_PUSH_startLoop = {
 
 			sleep 5;
 		};
-	}
+	}*/
 };
 
+/*
 RSTF_MODE_PUSH_unitKilled = {
 	_this call RSTF_fnc_killHandler;
 };
@@ -335,3 +335,4 @@ RSTF_MODE_PUSH_taskCompleted = {
 };
 
 RSTF_MODE_PUSH_vehicleKilled = {};
+*/
