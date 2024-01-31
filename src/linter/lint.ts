@@ -2,9 +2,16 @@ import { Node } from '@/parser/parser'
 import { uppercaseGlobalsRule } from './rules/uppercaseGlobalsRule'
 import { undefinedVariablesRule } from './rules/undefinedVariablesRule'
 import { indentationRule } from './rules/indentationRule'
+import { preferPrivateRule } from './rules/preferPrivateRule'
 
 export const lint = (node: Node, code: string) => {
-	const rules = [uppercaseGlobalsRule, undefinedVariablesRule, indentationRule]
+	const rules = [
+		uppercaseGlobalsRule,
+		undefinedVariablesRule,
+		indentationRule,
+		preferPrivateRule,
+	]
+
 	const issues = [] as {
 		position: { start: number; end: number }
 		message: string
@@ -61,11 +68,11 @@ export const lint = (node: Node, code: string) => {
 		...issue,
 		position: {
 			...issue.position,
-			startLine: code.slice(0, issue.position.start).split('\n').length + 1,
+			startLine: code.slice(0, issue.position.start).split('\n').length,
 			startOffset:
 				issue.position.start -
 				code.slice(0, issue.position.start).lastIndexOf('\n'),
-			endLine: code.slice(0, issue.position.end).split('\n').length + 1,
+			endLine: code.slice(0, issue.position.end).split('\n').length,
 			endOffset:
 				issue.position.end -
 				code.slice(0, issue.position.end).lastIndexOf('\n'),

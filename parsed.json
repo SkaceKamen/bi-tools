@@ -6,276 +6,128 @@
       "private": false,
       "id": {
         "type": "identifier",
-        "contents": "RSTF_MODE_PUSH_ENABLED",
+        "contents": "_test",
         "position": {
-          "from": 492,
-          "to": 514
+          "from": 257,
+          "to": 262
         }
       },
       "init": {
-        "type": "unary-expression",
-        "operator": {
-          "type": "identifier",
-          "contents": "false",
-          "position": {
-            "from": 517,
-            "to": 522
-          }
-        },
-        "start": 517,
-        "end": 522
+        "type": "literal",
+        "value": "something",
+        "raw": "\"something\"",
+        "start": 265,
+        "end": 275
       },
-      "start": 492,
-      "end": 516
+      "start": 257,
+      "end": 264
     },
     {
       "type": "assignment",
       "private": false,
       "id": {
         "type": "identifier",
-        "contents": "RSTF_MODE_PUSH_COUNTS",
+        "contents": "RSTF_SPAWNS",
         "position": {
-          "from": 524,
-          "to": 545
+          "from": 278,
+          "to": 289
         }
       },
       "init": {
         "type": "array",
-        "elements": [],
-        "start": 548,
-        "end": 550
-      },
-      "start": 524,
-      "end": 547
-    },
-    {
-      "type": "assignment",
-      "private": false,
-      "id": {
-        "type": "identifier",
-        "contents": "RSTF_MODE_PUSH_POINTS",
-        "position": {
-          "from": 552,
-          "to": 573
-        }
-      },
-      "init": {
-        "type": "array",
-        "elements": [],
-        "start": 576,
-        "end": 578
-      },
-      "start": 552,
-      "end": 575
-    },
-    {
-      "type": "assignment",
-      "private": false,
-      "id": {
-        "type": "identifier",
-        "contents": "RSTF_MODE_PUSH_POINT_INDEX",
-        "position": {
-          "from": 580,
-          "to": 606
-        }
-      },
-      "init": {
-        "type": "binary-expression",
-        "operator": {
-          "type": "keyword",
-          "contents": "-",
-          "position": {
-            "from": 609,
-            "to": 610
-          }
-        },
-        "right": {
-          "type": "literal",
-          "value": 1,
-          "raw": "1",
-          "start": 610,
-          "end": 612
-        },
-        "start": 609,
-        "end": 612
-      },
-      "start": 580,
-      "end": 608
-    },
-    {
-      "type": "assignment",
-      "private": false,
-      "id": {
-        "type": "identifier",
-        "contents": "RSTF_MODE_PUSH_TASK_ATTACKERS",
-        "position": {
-          "from": 613,
-          "to": 642
-        }
-      },
-      "init": {
-        "type": "literal",
-        "value": "",
-        "raw": "\"\"",
-        "start": 645,
-        "end": 646
-      },
-      "start": 613,
-      "end": 644
-    },
-    {
-      "type": "assignment",
-      "private": false,
-      "id": {
-        "type": "identifier",
-        "contents": "RSTF_MODE_PUSH_TASK_DEFENDERS",
-        "position": {
-          "from": 649,
-          "to": 678
-        }
-      },
-      "init": {
-        "type": "literal",
-        "value": "",
-        "raw": "\"\"",
-        "start": 681,
-        "end": 682
-      },
-      "start": 649,
-      "end": 680
-    },
-    {
-      "type": "assignment",
-      "private": false,
-      "id": {
-        "type": "identifier",
-        "contents": "RSTF_MODE_DEFENDERS_SIDE",
-        "position": {
-          "from": 685,
-          "to": 709
-        }
-      },
-      "init": {
-        "type": "literal",
-        "value": 0,
-        "raw": "0",
-        "start": 712,
-        "end": 714
-      },
-      "start": 685,
-      "end": 711
-    },
-    {
-      "type": "assignment",
-      "private": false,
-      "id": {
-        "type": "identifier",
-        "contents": "RSTF_MODE_ATTACKERS_SIDE",
-        "position": {
-          "from": 715,
-          "to": 739
-        }
-      },
-      "init": {
-        "type": "literal",
-        "value": 1,
-        "raw": "1",
-        "start": 742,
-        "end": 744
-      },
-      "start": 715,
-      "end": 741
-    },
-    {
-      "type": "assignment",
-      "private": false,
-      "id": {
-        "type": "identifier",
-        "contents": "RSTF_MODE_DISTANCE_KILL_TIMEOUT",
-        "position": {
-          "from": 746,
-          "to": 777
-        }
-      },
-      "init": {
-        "type": "literal",
-        "value": 20,
-        "raw": "20",
-        "start": 780,
-        "end": 783
-      },
-      "start": 746,
-      "end": 779
-    },
-    {
-      "type": "assignment",
-      "private": false,
-      "id": {
-        "type": "identifier",
-        "contents": "RSTF_MODE_PUSH_NEXT_POINT",
-        "position": {
-          "from": 785,
-          "to": 810
-        }
-      },
-      "init": {
-        "type": "block",
-        "body": [
+        "elements": [
           {
-            "type": "assignment",
-            "private": false,
-            "id": {
-              "type": "identifier",
-              "contents": "RSTF_MODE_PUSH_POINT_INDEX",
-              "position": {
-                "from": 815,
-                "to": 841
-              }
-            },
-            "init": {
-              "type": "ternary-expression",
-              "left": {
-                "type": "variable",
-                "id": {
-                  "type": "identifier",
-                  "contents": "RSTF_MODE_PUSH_POINT_INDEX",
-                  "position": {
-                    "from": 844,
-                    "to": 870
-                  }
-                },
-                "start": 844,
-                "end": 870
-              },
-              "operator": {
-                "type": "keyword",
-                "contents": "+",
-                "position": {
-                  "from": 871,
-                  "to": 872
-                }
-              },
-              "right": {
+            "type": "array",
+            "elements": [
+              {
                 "type": "literal",
-                "value": 1,
-                "raw": "1",
-                "start": 873,
-                "end": 875
+                "value": 0,
+                "raw": "0",
+                "start": 296,
+                "end": 298
               },
-              "start": 844,
-              "end": 875
-            },
-            "start": 815,
-            "end": 843
+              {
+                "type": "literal",
+                "value": 0,
+                "raw": "0",
+                "start": 298,
+                "end": 300
+              },
+              {
+                "type": "literal",
+                "value": 0,
+                "raw": "0",
+                "start": 300,
+                "end": 302
+              }
+            ],
+            "start": 295,
+            "end": 302
+          },
+          {
+            "type": "array",
+            "elements": [
+              {
+                "type": "literal",
+                "value": 0,
+                "raw": "0",
+                "start": 306,
+                "end": 308
+              },
+              {
+                "type": "literal",
+                "value": 0,
+                "raw": "0",
+                "start": 308,
+                "end": 310
+              },
+              {
+                "type": "literal",
+                "value": 0,
+                "raw": "0",
+                "start": 310,
+                "end": 312
+              }
+            ],
+            "start": 305,
+            "end": 312
+          },
+          {
+            "type": "array",
+            "elements": [
+              {
+                "type": "literal",
+                "value": 0,
+                "raw": "0",
+                "start": 316,
+                "end": 318
+              },
+              {
+                "type": "literal",
+                "value": 0,
+                "raw": "0",
+                "start": 318,
+                "end": 320
+              },
+              {
+                "type": "literal",
+                "value": 0,
+                "raw": "0",
+                "start": 320,
+                "end": 322
+              }
+            ],
+            "start": 315,
+            "end": 322
           }
         ],
-        "start": 813,
-        "end": 7973
+        "start": 292,
+        "end": 324
       },
-      "start": 785,
-      "end": 812
+      "start": 278,
+      "end": 291
     }
   ],
   "start": 0,
-  "end": 812
+  "end": 291
 }

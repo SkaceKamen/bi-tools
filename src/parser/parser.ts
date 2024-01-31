@@ -382,6 +382,10 @@ export const parse = (tokens: Token[], source: string): Node => {
 			console.trace('parsed unary expression', JSON.stringify(token, null, 2))
 
 		if (!isUnaryOperator(token)) {
+			if (token.type !== 'identifier') {
+				raise(token, 'Expected unary operator')
+			}
+
 			return {
 				type: 'variable',
 				id: token,
@@ -494,6 +498,10 @@ export const parse = (tokens: Token[], source: string): Node => {
 		const isPrivate = token.contents?.toLowerCase() === 'private'
 		const id = isPrivate ? peekToken(1) : token
 		const next = isPrivate ? peekToken(2) : peekToken(1)
+
+		if (id.type !== 'identifier') {
+			raise(id, 'Expected identifier')
+		}
 
 		if (next.type !== 'keyword' || next.contents !== '=') {
 			raise(next, 'Expected declaration')

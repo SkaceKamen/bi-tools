@@ -11,6 +11,8 @@ async function main() {
 
 	const preprocessed = preprocess(contents)
 
+	await fs.promises.writeFile('processed.sqf', preprocessed.code)
+
 	console.time('tokenize')
 	const tokens = tokenize(preprocessed.code)
 	console.timeEnd('tokenize')

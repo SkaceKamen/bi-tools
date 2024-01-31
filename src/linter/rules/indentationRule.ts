@@ -4,6 +4,22 @@ import { defineRule } from '../defineRule'
 export const indentationRule = defineRule({
 	id: 'indentation',
 	walk(node, ctx) {
+		const isFirstNode = (node: Node) => {
+			let previousLineIndex = ctx.sourceCode
+				.slice(0, node.start)
+				.lastIndexOf('\n')
+
+			if (previousLineIndex < 0) {
+				previousLineIndex = 0
+			}
+
+			return (
+				ctx.sourceCode
+					.slice(previousLineIndex + 1, node.start)
+					.match(/^[ \t]*$/) !== null
+			)
+		}
+
 		const getIndentOf = (node: Node) => {
 			let previousLineIndex = ctx.sourceCode
 				.slice(0, node.start)
@@ -12,24 +28,19 @@ export const indentationRule = defineRule({
 			if (previousLineIndex < 0) {
 				previousLineIndex = 0
 			}
-			console.log(node)
-			console.log({
-				length: node.start - 1 - previousLineIndex,
-				start: previousLineIndex,
-				end: node.start - 1,
-			})
 
 			return {
-				length: node.start - 1 - previousLineIndex,
-				start: previousLineIndex,
-				end: node.start - 1,
+				length: node.start - (previousLineIndex + 1),
+				start: previousLineIndex + 1,
+				end: node.start,
 			}
 		}
 
 		const checkIndentOf = (nodes: Node[], targetIndent: number) => {
 			for (const node of nodes) {
+				const firstNode = isFirstNode(node)
 				const indent = getIndentOf(node)
-				if (indent.length !== targetIndent) {
+				if (firstNode && indent.length !== targetIndent) {
 					ctx.report({
 						rule: 'indentation',
 						message: `Expected indentation of ${targetIndent}, but got ${indent.length}.`,
@@ -42,9 +53,13 @@ export const indentationRule = defineRule({
 				}
 
 				if (node.type === 'assignment') {
-					if (node.init.type === 'block') {
-						checkIndentOf([node.init], targetIndent)
-					}
+					// if (node.init.type === 'block') {
+					checkIndentOf([node.init], targetIndent)
+					// }
+				}
+
+				if (node.type === 'array') {
+					checkIndentOf(node.elements, targetIndent + 1)
 				}
 			}
 		}

@@ -11,8 +11,8 @@ export const preprocess = (code: string) => {
 			// lines.splice(i, 1, ...included.split('\n'))
 			// }
 			line = ''
+			lines[i] = line
 		}
-		lines[i] = line
 	}
 
 	return {
