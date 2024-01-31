@@ -10,7 +10,7 @@ export const preferPrivateRule = defineRule({
 			if (!node.private && !alreadyDefined.has(varName)) {
 				ctx.report({
 					rule: 'prefer-private',
-					message: `Declare local variables as private when possible.`,
+					message: `Local variables should be declared as private `,
 					position: { start: node.start, end: node.end },
 				})
 			}

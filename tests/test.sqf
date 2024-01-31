@@ -3,7 +3,12 @@
 //private _distance = RSTF_SPAWN_DISTANCE_MIN + random(RSTF_SPAWN_DISTANCE_MAX - RSTF_SPAWN_DISTANCE_MIN);
 //[RSTF_MODE_ATTACKERS_SIDE] call RSTF_fnc_indexSide
 
+params ["_test", ["_test2"]];
+
 _test = "something";
+
+diag_log _test2;
+
 RSTF_SPAWNS = [
 	[0,0,0],
 	[0,0,0],
