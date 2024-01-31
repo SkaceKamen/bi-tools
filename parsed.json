@@ -2,199 +2,71 @@
   "type": "script",
   "body": [
     {
-      "type": "binary-expression",
-      "operator": {
-        "type": "identifier",
-        "contents": "params",
-        "position": {
-          "from": 257,
-          "to": 263
-        }
-      },
-      "right": {
-        "type": "array",
-        "elements": [
-          {
-            "type": "literal",
-            "value": "_test",
-            "raw": "\"_test\"",
-            "start": 265,
-            "end": 271
-          },
-          {
-            "type": "array",
-            "elements": [
-              {
-                "type": "literal",
-                "value": "_test2",
-                "raw": "\"_test2\"",
-                "start": 275,
-                "end": 282
-              }
-            ],
-            "start": 274,
-            "end": 284
-          }
-        ],
-        "start": 264,
-        "end": 285
-      },
-      "start": 257,
-      "end": 285
-    },
-    {
-      "type": "assignment",
-      "private": false,
-      "id": {
-        "type": "identifier",
-        "contents": "_test",
-        "position": {
-          "from": 288,
-          "to": 293
-        }
-      },
-      "init": {
-        "type": "literal",
-        "value": "something",
-        "raw": "\"something\"",
-        "start": 296,
-        "end": 306
-      },
-      "start": 288,
-      "end": 295
-    },
-    {
-      "type": "binary-expression",
-      "operator": {
-        "type": "identifier",
-        "contents": "diag_log",
-        "position": {
-          "from": 310,
-          "to": 318
-        }
-      },
-      "right": {
-        "type": "variable",
-        "id": {
+      "type": "ternary-expression",
+      "left": {
+        "type": "binary-expression",
+        "operator": {
           "type": "identifier",
-          "contents": "_test2",
+          "contents": "if",
           "position": {
-            "from": 319,
-            "to": 325
+            "from": 0,
+            "to": 2
           }
         },
-        "start": 319,
-        "end": 325
+        "right": {
+          "type": "ternary-expression",
+          "left": {
+            "type": "variable",
+            "id": {
+              "type": "identifier",
+              "contents": "_moved",
+              "position": {
+                "from": 4,
+                "to": 10
+              }
+            },
+            "start": 4,
+            "end": 10
+          },
+          "operator": {
+            "type": "keyword",
+            "contents": "<",
+            "position": {
+              "from": 11,
+              "to": 12
+            }
+          },
+          "right": {
+            "type": "literal",
+            "value": 1,
+            "raw": "1",
+            "start": 13,
+            "end": 15
+          },
+          "start": 4,
+          "end": 15
+        },
+        "start": 0,
+        "end": 15
       },
-      "start": 310,
-      "end": 325
-    },
-    {
-      "type": "assignment",
-      "private": false,
-      "id": {
+      "operator": {
         "type": "identifier",
-        "contents": "RSTF_SPAWNS",
+        "contents": "then",
         "position": {
-          "from": 328,
-          "to": 339
+          "from": 57,
+          "to": 61
         }
       },
-      "init": {
-        "type": "array",
-        "elements": [
-          {
-            "type": "array",
-            "elements": [
-              {
-                "type": "literal",
-                "value": 0,
-                "raw": "0",
-                "start": 346,
-                "end": 348
-              },
-              {
-                "type": "literal",
-                "value": 0,
-                "raw": "0",
-                "start": 348,
-                "end": 350
-              },
-              {
-                "type": "literal",
-                "value": 0,
-                "raw": "0",
-                "start": 350,
-                "end": 352
-              }
-            ],
-            "start": 345,
-            "end": 352
-          },
-          {
-            "type": "array",
-            "elements": [
-              {
-                "type": "literal",
-                "value": 0,
-                "raw": "0",
-                "start": 356,
-                "end": 358
-              },
-              {
-                "type": "literal",
-                "value": 0,
-                "raw": "0",
-                "start": 358,
-                "end": 360
-              },
-              {
-                "type": "literal",
-                "value": 0,
-                "raw": "0",
-                "start": 360,
-                "end": 362
-              }
-            ],
-            "start": 355,
-            "end": 362
-          },
-          {
-            "type": "array",
-            "elements": [
-              {
-                "type": "literal",
-                "value": 0,
-                "raw": "0",
-                "start": 366,
-                "end": 368
-              },
-              {
-                "type": "literal",
-                "value": 0,
-                "raw": "0",
-                "start": 368,
-                "end": 370
-              },
-              {
-                "type": "literal",
-                "value": 0,
-                "raw": "0",
-                "start": 370,
-                "end": 372
-              }
-            ],
-            "start": 365,
-            "end": 372
-          }
-        ],
-        "start": 342,
-        "end": 374
+      "right": {
+        "type": "block",
+        "body": [],
+        "start": 62,
+        "end": 64
       },
-      "start": 328,
-      "end": 341
+      "start": 0,
+      "end": 64
     }
   ],
   "start": 0,
-  "end": 341
+  "end": 64
 }

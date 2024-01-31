@@ -25,5 +25,8 @@
   "license": "ISC",
   "_moduleAliases": {
     "@": "./build"
+  },
+  "dependencies": {
+    "glob": "^10.3.10"
   }
 }

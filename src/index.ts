@@ -19,7 +19,7 @@ async function main() {
 	await fs.promises.writeFile('tokens.json', JSON.stringify(tokens, null, 2))
 
 	console.time('parse')
-	const parsed = parse(tokens, preprocessed.code)
+	const parsed = parse(tokens, preprocessed.code, { debug: true })
 	console.timeEnd('parse')
 	await fs.promises.writeFile('parsed.json', JSON.stringify(parsed, null, 2))
 

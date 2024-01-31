@@ -3459,6 +3459,27 @@ __metadata:
   languageName: node
   linkType: hard
 
+"sqflint@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "sqflint@workspace:."
+  dependencies:
+    "@types/node": ^20.1.7
+    "@typescript-eslint/eslint-plugin": ^5.7.0
+    "@typescript-eslint/parser": ^5.7.0
+    eslint: ^8.5.0
+    eslint-config-prettier: ^8.5.0
+    eslint-plugin-prettier: ^4.0.0
+    eslint-plugin-react: ^7.32.2
+    eslint-plugin-react-hooks: ^4.6.0
+    glob: ^10.3.10
+    prettier: ^2.5.1
+    ts-node: ^10.9.1
+    tsconfig-paths: ^4.2.0
+    typescript: ^5.0.4
+    vitest: ^1.2.2
+  languageName: unknown
+  linkType: soft
+
 "ssri@npm:^10.0.0":
   version: 10.0.5
   resolution: "ssri@npm:10.0.5"
@@ -3844,26 +3865,6 @@ __metadata:
   checksum: b7a1cf5862b5e4b5deb091672ffa579aa274f648410009c81cca63fed3b62b610c4f3b773f912ce545bb4e31edc3138975b5bc777fc6e4817dca51affb6380e9
   languageName: node
   linkType: hard
-
-"unciv-ts@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "unciv-ts@workspace:."
-  dependencies:
-    "@types/node": ^20.1.7
-    "@typescript-eslint/eslint-plugin": ^5.7.0
-    "@typescript-eslint/parser": ^5.7.0
-    eslint: ^8.5.0
-    eslint-config-prettier: ^8.5.0
-    eslint-plugin-prettier: ^4.0.0
-    eslint-plugin-react: ^7.32.2
-    eslint-plugin-react-hooks: ^4.6.0
-    prettier: ^2.5.1
-    ts-node: ^10.9.1
-    tsconfig-paths: ^4.2.0
-    typescript: ^5.0.4
-    vitest: ^1.2.2
-  languageName: unknown
-  linkType: soft
 
 "undici-types@npm:~5.26.4":
   version: 5.26.5

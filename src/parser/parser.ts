@@ -3,8 +3,6 @@ import { Token } from './tokenizer'
 
 type NodeBase = { start: number; end: number }
 
-const DEBUG = false
-
 export type ScriptNode = NodeBase & {
 	type: 'script'
 	body: Node[]
@@ -69,7 +67,11 @@ export type Node =
 
 export class ParserError extends Error {}
 
-export const parse = (tokens: Token[], source: string): Node => {
+export const parse = (
+	tokens: Token[],
+	source: string,
+	{ debug = false } = {}
+): Node => {
 	const { ternaryOperators, binaryOperators, unaryOperators } = operators
 
 	let index = 0
@@ -84,7 +86,7 @@ export const parse = (tokens: Token[], source: string): Node => {
 		const line = source.slice(0, offset).split('\n').length
 		const lastLineIndex = source.slice(0, offset).lastIndexOf('\n')
 
-		DEBUG &&
+		debug &&
 			console.trace(
 				`(at ${index}) Raising: ${message} (at ${token.type} "${token.contents}")`
 			)
@@ -109,7 +111,7 @@ export const parse = (tokens: Token[], source: string): Node => {
 			return fn()
 		} catch (error) {
 			if (error instanceof ParserError) {
-				DEBUG &&
+				debug &&
 					console.log('Caught at index', index, 'resetting to', beginIndex)
 				index = beginIndex
 				return null
@@ -170,7 +172,7 @@ export const parse = (tokens: Token[], source: string): Node => {
 
 			const assignment = tryParse(parseAssignment)
 			if (assignment) {
-				DEBUG && console.log('Assignment', JSON.stringify(assignment, null, 2))
+				debug && console.log('Assignment', JSON.stringify(assignment, null, 2))
 				body.push(assignment)
 				continue
 			}
@@ -182,7 +184,7 @@ export const parse = (tokens: Token[], source: string): Node => {
 					continue
 				}
 			} catch (err) {
-				DEBUG && console.log(JSON.stringify(body[body.length - 1], null, 2))
+				debug && console.log(JSON.stringify(body[body.length - 1], null, 2))
 				throw err
 			}
 
@@ -203,6 +205,7 @@ export const parse = (tokens: Token[], source: string): Node => {
 		const expression =
 			tryParse(parseTernaryExpression) ??
 			tryParse(parseBinaryExpression) ??
+			tryParse(parseBrackets) ??
 			tryParse(parseCodeBlock) ??
 			tryParse(parseArray) ??
 			tryParse(parseLiteral) ??
@@ -249,7 +252,7 @@ export const parse = (tokens: Token[], source: string): Node => {
 	}
 
 	const parseBrackets = (): Node => {
-		DEBUG &&
+		debug &&
 			console.log(tokens[index].type, tokens[index].contents, 'parseBrackets')
 
 		const token = peekToken(0)
@@ -272,7 +275,7 @@ export const parse = (tokens: Token[], source: string): Node => {
 	}
 
 	const parseTernaryExpression = (): Node => {
-		DEBUG &&
+		debug &&
 			console.log(
 				tokens[index].type,
 				tokens[index].contents,
@@ -317,7 +320,7 @@ export const parse = (tokens: Token[], source: string): Node => {
 			return raise(tokens[index], 'Expected ternary expression')
 		}
 
-		DEBUG &&
+		debug &&
 			console.trace(
 				'parsed ternary expression',
 				JSON.stringify({ result }, null, 2)
@@ -327,7 +330,7 @@ export const parse = (tokens: Token[], source: string): Node => {
 	}
 
 	const parseBinaryExpression = (): Node => {
-		DEBUG &&
+		debug &&
 			console.log(
 				tokens[index].type,
 				tokens[index].contents,
@@ -347,7 +350,7 @@ export const parse = (tokens: Token[], source: string): Node => {
 
 		const right = parseExpressionWithoutTernary()
 
-		DEBUG &&
+		debug &&
 			console.trace(
 				'parsed binary expression',
 				JSON.stringify({ right }, null, 2)
@@ -363,7 +366,7 @@ export const parse = (tokens: Token[], source: string): Node => {
 	}
 
 	const parseUnaryExpression = (): Node => {
-		DEBUG &&
+		debug &&
 			console.log(
 				tokens[index].type,
 				tokens[index].contents,
@@ -378,7 +381,7 @@ export const parse = (tokens: Token[], source: string): Node => {
 
 		index++
 
-		DEBUG &&
+		debug &&
 			console.trace('parsed unary expression', JSON.stringify(token, null, 2))
 
 		if (!isUnaryOperator(token)) {
@@ -456,7 +459,7 @@ export const parse = (tokens: Token[], source: string): Node => {
 			}
 
 			if (!(next.type === 'keyword' && next.contents === ',')) {
-				DEBUG && console.log(JSON.stringify(element, null, 2))
+				debug && console.log(JSON.stringify(element, null, 2))
 
 				raise(next, 'Expected , or ]')
 			}

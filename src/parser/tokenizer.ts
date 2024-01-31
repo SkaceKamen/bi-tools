@@ -44,6 +44,8 @@ const KEYWORDS = [
 	'+',
 	'!',
 	'#',
+	'/',
+	':',
 ]
 
 const NUMBER_START = /[0-9]/
@@ -56,7 +58,7 @@ export const tokenize = (input: string): Token[] => {
 	const tokens = [] as Token[]
 
 	const parseError = (error: string) => {
-		console.log(JSON.stringify(tokens, null, 2))
+		// console.log(JSON.stringify(tokens, null, 2))
 
 		const line = input.slice(0, offset).split('\n').length
 		const lastLineIndex = input.slice(0, offset).lastIndexOf('\n')
@@ -106,8 +108,26 @@ export const tokenize = (input: string): Token[] => {
 
 		offset++
 
-		while (offset < input.length && input[offset].match(NUMBER_REST)) {
-			offset++
+		// TODO: What about number with >1 dot? Those should also be invalid
+
+		while (offset < input.length) {
+			if (input[offset].match(NUMBER_REST)) {
+				offset++
+			} else if (input[offset] === 'e') {
+				offset++
+
+				if (input[offset] === '-' || input[offset] === '+') {
+					offset++
+				}
+
+				while (offset < input.length && input[offset].match(NUMBER_REST)) {
+					offset++
+				}
+
+				return input.slice(start, offset)
+			} else {
+				break
+			}
 		}
 
 		return input.slice(start, offset)
@@ -146,7 +166,7 @@ export const tokenize = (input: string): Token[] => {
 			parseError('Unterminated multiline comment')
 		}
 
-		offset += 2
+		offset += 1
 		return input.slice(start, offset)
 	}
 
@@ -172,6 +192,48 @@ export const tokenize = (input: string): Token[] => {
 				},
 			})
 
+			continue
+		}
+
+		if (
+			offset < input.length - 1 &&
+			char === '/' &&
+			input[offset + 1] === '/'
+		) {
+			const start = offset
+			const contents = readLineComment()
+
+			tokens.push({
+				type: 'line-comment',
+				contents,
+				position: {
+					from: start,
+					to: offset + 1,
+				},
+			})
+
+			offset++
+			continue
+		}
+
+		if (
+			offset < input.length - 1 &&
+			char === '/' &&
+			input[offset + 1] === '*'
+		) {
+			const start = offset
+			const contents = readMultiLineComment()
+
+			tokens.push({
+				type: 'multi-line-comment',
+				contents,
+				position: {
+					from: start,
+					to: offset + 1,
+				},
+			})
+
+			offset++
 			continue
 		}
 
@@ -203,48 +265,6 @@ export const tokenize = (input: string): Token[] => {
 				position: {
 					from: start,
 					to: offset,
-				},
-			})
-
-			offset++
-			continue
-		}
-
-		if (
-			offset < input.length - 1 &&
-			char[0] === '/' &&
-			input[offset + 1] === '/'
-		) {
-			const start = offset
-			const contents = readLineComment()
-
-			tokens.push({
-				type: 'line-comment',
-				contents,
-				position: {
-					from: start,
-					to: offset + 1,
-				},
-			})
-
-			offset++
-			continue
-		}
-
-		if (
-			offset < input.length - 1 &&
-			char[0] === '/' &&
-			input[offset + 1] === '*'
-		) {
-			const start = offset
-			const contents = readMultiLineComment()
-
-			tokens.push({
-				type: 'multi-line-comment',
-				contents,
-				position: {
-					from: start,
-					to: offset + 1,
 				},
 			})
 

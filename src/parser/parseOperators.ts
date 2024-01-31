@@ -13,6 +13,8 @@ export const parseOperators = (input: string) => {
 		}
 	})
 
+	ternaryOperators.add(':')
+
 	return {
 		ternaryOperators,
 		binaryOperators,

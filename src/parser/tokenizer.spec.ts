@@ -67,3 +67,26 @@ test('parses strings with escapes', () => {
 		},
 	])
 })
+
+test('parses numbers', () => {
+	expect(tokenize('144.2e5')).toEqual([
+		expect.objectContaining({
+			type: 'number',
+			contents: '144.2e5',
+		}),
+		expect.objectContaining({
+			contents: '',
+			type: 'eof',
+		}),
+	])
+	expect(tokenize('10e-005')).toEqual([
+		expect.objectContaining({
+			type: 'number',
+			contents: '10e-005',
+		}),
+		expect.objectContaining({
+			contents: '',
+			type: 'eof',
+		}),
+	])
+})

@@ -26,7 +26,7 @@ export const indentationRule = defineRule({
 				.lastIndexOf('\n')
 
 			if (previousLineIndex < 0) {
-				previousLineIndex = 0
+				previousLineIndex = -1
 			}
 
 			return {
