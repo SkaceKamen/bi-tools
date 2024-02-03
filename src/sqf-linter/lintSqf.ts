@@ -1,5 +1,5 @@
 import { SqfNode } from '@/sqf-parser/parseSqf'
-import { walk } from '@/utils/walk'
+import { walkSqf } from '@/utils/walkSqf'
 import { indentationRule } from './rules/indentationRule'
 import { preferPrivateRule } from './rules/preferPrivateRule'
 import { undefinedVariablesRule } from './rules/undefinedVariablesRule'
@@ -31,7 +31,7 @@ export const lintSqf = (node: SqfNode, code: string) => {
 		},
 	}
 
-	walk(node, (node) => {
+	walkSqf(node, (node) => {
 		for (const rule of rules) {
 			rule.walk(node, ctx)
 		}

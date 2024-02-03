@@ -1,5 +1,5 @@
 import { SqfNode } from '@/sqf-parser/parseSqf'
-import { walk } from '@/utils/walk'
+import { walkSqf } from '@/utils/walkSqf'
 
 export const analyze = (node: SqfNode) => {
 	const variables = new Map<
@@ -7,7 +7,7 @@ export const analyze = (node: SqfNode) => {
 		{ originalName: string; assignments: [from: number, to: number][] }
 	>()
 
-	walk(node, (node) => {
+	walkSqf(node, (node) => {
 		if (node.type === 'assignment') {
 			const name = node.id.contents
 			const nameKey = node.id.contents.toLowerCase()

@@ -4,6 +4,7 @@ import { lintSqf } from './sqf-linter/lintSqf'
 import { preprocess } from './preprocessor/preprocess'
 import { tokenizeSqf } from './sqf-parser/tokenizeSqf'
 import { parseSqf } from './sqf-parser/parseSqf'
+import path from 'path'
 
 async function main() {
 	const files = await glob(
@@ -18,7 +19,9 @@ async function main() {
 		try {
 			const file = await fs.promises.readFile(filePath)
 			const contents = file.toString()
-			const preprocessed = preprocess(contents)
+			const preprocessed = preprocess(contents, {
+				includeBaseDir: path.dirname(filePath),
+			})
 			const tokens = tokenizeSqf(preprocessed.code)
 			const parsed = parseSqf(tokens, preprocessed.code)
 			const lintIssues = lintSqf(parsed, preprocessed.code)
