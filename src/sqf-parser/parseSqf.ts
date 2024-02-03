@@ -1,78 +1,78 @@
-import { operators } from './operators'
-import { Token } from './tokenizer'
+import { sqfOperators } from './sqfOperators'
+import { SqfToken } from './tokenizeSqf'
 
-type NodeBase = { start: number; end: number }
+type SqfNodeBase = { start: number; end: number }
 
-export type ScriptNode = NodeBase & {
+export type SqfScriptNode = SqfNodeBase & {
 	type: 'script'
-	body: Node[]
+	body: SqfNode[]
 }
 
-export type AssignmentNode = NodeBase & {
+export type SqfAssignmentNode = SqfNodeBase & {
 	type: 'assignment'
 	private: boolean
-	id: Token
-	init: Node
+	id: SqfToken
+	init: SqfNode
 }
 
-export type BlockNode = NodeBase & {
+export type SqfBlockNode = SqfNodeBase & {
 	type: 'block'
-	body: Node[]
+	body: SqfNode[]
 }
 
-export type ArrayNode = NodeBase & {
+export type SqfArrayNode = SqfNodeBase & {
 	type: 'array'
-	elements: Node[]
+	elements: SqfNode[]
 }
 
-export type LiteralNode = NodeBase & {
+export type SqfLiteralNode = SqfNodeBase & {
 	type: 'literal'
 	value: string | number
 	raw: string
 }
 
-export type TernaryExpressionNode = NodeBase & {
+export type SqfTernaryExpressionNode = SqfNodeBase & {
 	type: 'ternary-expression'
-	operator: Token
-	left: Node
-	right: Node
+	operator: SqfToken
+	left: SqfNode
+	right: SqfNode
 }
 
-export type BinaryExpressionNode = NodeBase & {
+export type SqfBinaryExpressionNode = SqfNodeBase & {
 	type: 'binary-expression'
-	operator: Token
-	right: Node
+	operator: SqfToken
+	right: SqfNode
 }
 
-export type UnaryExpressionNode = NodeBase & {
+export type SqfUnaryExpressionNode = SqfNodeBase & {
 	type: 'unary-expression'
-	operator: Token
+	operator: SqfToken
 }
 
-export type VariableNode = NodeBase & {
+export type SqfVariableNode = SqfNodeBase & {
 	type: 'variable'
-	id: Token
+	id: SqfToken
 }
 
-export type Node =
-	| ScriptNode
-	| AssignmentNode
-	| BlockNode
-	| ArrayNode
-	| LiteralNode
-	| TernaryExpressionNode
-	| BinaryExpressionNode
-	| UnaryExpressionNode
-	| VariableNode
+export type SqfNode =
+	| SqfScriptNode
+	| SqfAssignmentNode
+	| SqfBlockNode
+	| SqfArrayNode
+	| SqfLiteralNode
+	| SqfTernaryExpressionNode
+	| SqfBinaryExpressionNode
+	| SqfUnaryExpressionNode
+	| SqfVariableNode
 
 export class ParserError extends Error {}
 
-export const parse = (
-	tokens: Token[],
+export const parseSqf = (
+	tokens: SqfToken[],
 	source: string,
 	{ debug = false } = {}
-): Node => {
-	const { ternaryOperators, binaryOperators, unaryOperators } = operators
+): SqfNode => {
+	const { ternaryOperators, binaryOperators, unaryOperators } = sqfOperators
 
 	let index = 0
 
@@ -81,7 +81,7 @@ export const parse = (
 		(t) => t.type !== 'line-comment' && t.type !== 'multi-line-comment'
 	)
 
-	const raise = (token: Token, message: string) => {
+	const raise = (token: SqfToken, message: string) => {
 		const offset = token.position.from
 		const line = source.slice(0, offset).split('\n').length
 		const lastLineIndex = source.slice(0, offset).lastIndexOf('\n')
@@ -104,7 +104,7 @@ export const parse = (
 		return tokens[index + offset]
 	}
 
-	const tryParse = (fn: () => Node) => {
+	const tryParse = (fn: () => SqfNode) => {
 		const beginIndex = index
 
 		try {
@@ -121,21 +121,21 @@ export const parse = (
 		}
 	}
 
-	const isUnaryOperator = (token: Token) =>
+	const isUnaryOperator = (token: SqfToken) =>
 		token.contents && unaryOperators.has(token.contents.toLowerCase())
 
-	const isTernaryOperator = (token: Token) =>
+	const isTernaryOperator = (token: SqfToken) =>
 		token.contents && ternaryOperators.has(token.contents.toLowerCase())
 
-	const isBinaryOperator = (token: Token) =>
+	const isBinaryOperator = (token: SqfToken) =>
 		token.contents && binaryOperators.has(token.contents.toLowerCase())
 
-	const isExpressionSeparator = (token: Token) =>
+	const isExpressionSeparator = (token: SqfToken) =>
 		token.type === 'keyword' && token.contents === ';'
 
-	const isEof = (token: Token) => token.type === 'eof'
+	const isEof = (token: SqfToken) => token.type === 'eof'
 
-	const isEndOfBlock = (token: Token) =>
+	const isEndOfBlock = (token: SqfToken) =>
 		token.type === 'keyword' && token.contents === '}'
 
 	/**
@@ -150,8 +150,8 @@ export const parse = (
 	/**
 	 * Parses a block of code
 	 */
-	const parseCode = (isEnd: (token: Token) => boolean): Node[] => {
-		const body: Node[] = []
+	const parseCode = (isEnd: (token: SqfToken) => boolean): SqfNode[] => {
+		const body: SqfNode[] = []
 
 		while (true) {
 			// This shouldn't happen, but just in case
@@ -201,7 +201,7 @@ export const parse = (
 		return body
 	}
 
-	const parseExpression = (): Node => {
+	const parseExpression = (): SqfNode => {
 		const expression =
 			tryParse(parseTernaryExpression) ??
 			tryParse(parseBinaryExpression) ??
@@ -221,7 +221,7 @@ export const parse = (
 		return expression
 	}
 
-	const parseExpressionWithoutTernary = (): Node => {
+	const parseExpressionWithoutTernary = (): SqfNode => {
 		// Detect prefixed expressions
 		const token = peekToken(0)
 		if (token.type === 'keyword' && token.contents === '(') {
@@ -251,7 +251,7 @@ export const parse = (
 		return expression
 	}
 
-	const parseBrackets = (): Node => {
+	const parseBrackets = (): SqfNode => {
 		debug &&
 			console.log(tokens[index].type, tokens[index].contents, 'parseBrackets')
 
@@ -274,7 +274,7 @@ export const parse = (
 		return expression
 	}
 
-	const parseTernaryExpression = (): Node => {
+	const parseTernaryExpression = (): SqfNode => {
 		debug &&
 			console.log(
 				tokens[index].type,
@@ -288,7 +288,7 @@ export const parse = (
 
 		const left = parseExpressionWithoutTernary()
 
-		const rightChildren = [] as { operator: Token; right: Node }[]
+		const rightChildren = [] as { operator: SqfToken; right: SqfNode }[]
 		while (true) {
 			const operator = tokens[index]
 			if (!isTernaryOperator(operator)) {
@@ -302,7 +302,7 @@ export const parse = (
 			rightChildren.push({ operator, right: token })
 		}
 
-		let result: TernaryExpressionNode | undefined
+		let result: SqfTernaryExpressionNode | undefined
 		for (const item of rightChildren) {
 			const thisLeft = result ?? left
 
@@ -329,7 +329,7 @@ export const parse = (
 		return result
 	}
 
-	const parseBinaryExpression = (): Node => {
+	const parseBinaryExpression = (): SqfNode => {
 		debug &&
 			console.log(
 				tokens[index].type,
@@ -365,7 +365,7 @@ export const parse = (
 		}
 	}
 
-	const parseUnaryExpression = (): Node => {
+	const parseUnaryExpression = (): SqfNode => {
 		debug &&
 			console.log(
 				tokens[index].type,
@@ -405,7 +405,7 @@ export const parse = (
 		}
 	}
 
-	const parseCodeBlock = (): Node => {
+	const parseCodeBlock = (): SqfNode => {
 		const token = tokens[index]
 		if (token.type !== 'keyword' || token.contents !== '{') {
 			raise(token, 'Expected {')
@@ -430,7 +430,7 @@ export const parse = (
 		}
 	}
 
-	const parseArray = (): Node => {
+	const parseArray = (): SqfNode => {
 		const token = peekToken(0)
 		if (token.type !== 'keyword' || token.contents !== '[') {
 			raise(token, 'Expected [')
@@ -438,7 +438,7 @@ export const parse = (
 
 		index++
 
-		const elements: Node[] = []
+		const elements: SqfNode[] = []
 
 		while (true) {
 			const current = peekToken(0)
@@ -475,7 +475,7 @@ export const parse = (
 		}
 	}
 
-	const parseLiteral = (): Node => {
+	const parseLiteral = (): SqfNode => {
 		const token = tokens[index]
 
 		if (token.type !== 'number' && token.type !== 'string') {
@@ -496,7 +496,7 @@ export const parse = (
 		}
 	}
 
-	const parseAssignment = (): Node => {
+	const parseAssignment = (): SqfNode => {
 		const token = tokens[index]
 		const isPrivate = token.contents?.toLowerCase() === 'private'
 		const id = isPrivate ? peekToken(1) : token

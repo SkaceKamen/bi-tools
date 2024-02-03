@@ -1,6 +1,6 @@
-import { parseOperators } from './parseOperators'
+import { parseSqfOperators } from './parseSqfOperators'
 
-export const operators = parseOperators(`
+export const sqfOperators = parseSqfOperators(`
 t:SCALAR
 t:BOOL
 t:ARRAY

@@ -1,8 +1,8 @@
 import { test, expect } from 'vitest'
-import { tokenize } from './tokenizer'
+import { tokenizeSqf } from './tokenizeSqf'
 
 test('parses strings', () => {
-	expect(tokenize("'test'")).toEqual([
+	expect(tokenizeSqf("'test'")).toEqual([
 		{
 			type: 'string',
 			contents: "'test'",
@@ -18,7 +18,7 @@ test('parses strings', () => {
 		},
 	])
 
-	expect(tokenize('"test"')).toEqual([
+	expect(tokenizeSqf('"test"')).toEqual([
 		{
 			type: 'string',
 			contents: '"test"',
@@ -36,7 +36,7 @@ test('parses strings', () => {
 })
 
 test('parses strings with escapes', () => {
-	expect(tokenize('"te""st"')).toEqual([
+	expect(tokenizeSqf('"te""st"')).toEqual([
 		{
 			type: 'string',
 			contents: '"te""st"',
@@ -51,7 +51,7 @@ test('parses strings with escapes', () => {
 			position: { from: 8, to: 8 },
 		},
 	])
-	expect(tokenize("'te''st'")).toEqual([
+	expect(tokenizeSqf("'te''st'")).toEqual([
 		{
 			type: 'string',
 			contents: "'te''st'",
@@ -69,7 +69,7 @@ test('parses strings with escapes', () => {
 })
 
 test('parses numbers', () => {
-	expect(tokenize('144.2e5')).toEqual([
+	expect(tokenizeSqf('144.2e5')).toEqual([
 		expect.objectContaining({
 			type: 'number',
 			contents: '144.2e5',
@@ -79,7 +79,7 @@ test('parses numbers', () => {
 			type: 'eof',
 		}),
 	])
-	expect(tokenize('10e-005')).toEqual([
+	expect(tokenizeSqf('10e-005')).toEqual([
 		expect.objectContaining({
 			type: 'number',
 			contents: '10e-005',

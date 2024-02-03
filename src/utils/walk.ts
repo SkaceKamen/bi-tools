@@ -1,6 +1,6 @@
-import { Node } from '@/parser/parser'
+import { SqfNode } from '@/sqf-parser/parseSqf'
 
-export const walk = (node: Node, callback: (node: Node) => void) => {
+export const walk = (node: SqfNode, callback: (node: SqfNode) => void) => {
 	callback(node)
 
 	switch (node.type) {

@@ -1,10 +1,10 @@
-import { Node } from '@/parser/parser'
+import { SqfNode } from '@/sqf-parser/parseSqf'
 import { defineRule } from '../defineRule'
 
 export const indentationRule = defineRule({
 	id: 'indentation',
 	walk(node, ctx) {
-		const isFirstNode = (node: Node) => {
+		const isFirstNode = (node: SqfNode) => {
 			let previousLineIndex = ctx.sourceCode
 				.slice(0, node.start)
 				.lastIndexOf('\n')
@@ -20,7 +20,7 @@ export const indentationRule = defineRule({
 			)
 		}
 
-		const getIndentOf = (node: Node) => {
+		const getIndentOf = (node: SqfNode) => {
 			let previousLineIndex = ctx.sourceCode
 				.slice(0, node.start)
 				.lastIndexOf('\n')
@@ -36,7 +36,7 @@ export const indentationRule = defineRule({
 			}
 		}
 
-		const checkIndentOf = (nodes: Node[], targetIndent: number) => {
+		const checkIndentOf = (nodes: SqfNode[], targetIndent: number) => {
 			for (const node of nodes) {
 				const firstNode = isFirstNode(node)
 				const indent = getIndentOf(node)

@@ -1,10 +1,11 @@
-import { Node } from '@/parser/parser'
-import { uppercaseGlobalsRule } from './rules/uppercaseGlobalsRule'
-import { undefinedVariablesRule } from './rules/undefinedVariablesRule'
+import { SqfNode } from '@/sqf-parser/parseSqf'
+import { walk } from '@/utils/walk'
 import { indentationRule } from './rules/indentationRule'
 import { preferPrivateRule } from './rules/preferPrivateRule'
+import { undefinedVariablesRule } from './rules/undefinedVariablesRule'
+import { uppercaseGlobalsRule } from './rules/uppercaseGlobalsRule'
 
-export const lint = (node: Node, code: string) => {
+export const lintSqf = (node: SqfNode, code: string) => {
 	const rules = [
 		uppercaseGlobalsRule,
 		undefinedVariablesRule,
@@ -30,41 +31,11 @@ export const lint = (node: Node, code: string) => {
 		},
 	}
 
-	const walk = (node: Node) => {
+	walk(node, (node) => {
 		for (const rule of rules) {
 			rule.walk(node, ctx)
 		}
-
-		switch (node.type) {
-			case 'script':
-				for (const child of node.body) {
-					walk(child)
-				}
-				break
-			case 'array':
-				for (const child of node.elements) {
-					walk(child)
-				}
-				break
-			case 'assignment':
-				walk(node.init)
-				break
-			case 'binary-expression':
-				walk(node.right)
-				break
-			case 'ternary-expression':
-				walk(node.left)
-				walk(node.right)
-				break
-			case 'block':
-				for (const child of node.body) {
-					walk(child)
-				}
-				break
-		}
-	}
-
-	walk(node)
+	})
 
 	return issues.map((issue) => ({
 		...issue,

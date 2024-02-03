@@ -1,9 +1,9 @@
-import { ArrayNode } from '@/parser/parser'
+import { SqfArrayNode } from '@/sqf-parser/parseSqf'
 import { defineRule } from '../defineRule'
 
 const alreadyDefined = new Set<string>(['_x', '_foreachindex'])
 
-const parsePrivateArgs = (node: ArrayNode) => {
+const parsePrivateArgs = (node: SqfArrayNode) => {
 	for (const item of node.elements) {
 		if (item.type === 'literal' && typeof item.value === 'string') {
 			alreadyDefined.add(item.value.toLowerCase())

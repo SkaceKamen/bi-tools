@@ -1,10 +1,9 @@
 import fs from 'fs'
-import { tokenize } from './parser/tokenizer'
-import { parse } from './parser/parser'
-import { stringify } from './parser/stringify'
-import { preprocess } from './parser/preprocessor'
-import { lint } from './linter/lint'
-import { analyze } from './analyzer/analyze'
+import { lintSqf } from './sqf-linter/lintSqf'
+import { analyze } from './sqf-analyzer/analyzeSqf'
+import { tokenizeSqf } from './sqf-parser/tokenizeSqf'
+import { preprocess } from './preprocessor/preprocess'
+import { parseSqf } from './sqf-parser/parseSqf'
 
 async function main() {
 	const file = await fs.promises.readFile(process.argv[2])
@@ -15,17 +14,17 @@ async function main() {
 	await fs.promises.writeFile('processed.sqf', preprocessed.code)
 
 	console.time('tokenize')
-	const tokens = tokenize(preprocessed.code)
+	const tokens = tokenizeSqf(preprocessed.code)
 	console.timeEnd('tokenize')
 	await fs.promises.writeFile('tokens.json', JSON.stringify(tokens, null, 2))
 
 	console.time('parse')
-	const parsed = parse(tokens, preprocessed.code, { debug: false })
+	const parsed = parseSqf(tokens, preprocessed.code, { debug: false })
 	console.timeEnd('parse')
 	await fs.promises.writeFile('parsed.json', JSON.stringify(parsed, null, 2))
 
 	console.time('lint')
-	const linerIssues = lint(parsed, preprocessed.code)
+	const linerIssues = lintSqf(parsed, preprocessed.code)
 	//console.log(stringify(parsed))
 	console.timeEnd('lint')
 

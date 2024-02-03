@@ -1,4 +1,4 @@
-export const parseOperators = (input: string) => {
+export const parseSqfOperators = (input: string) => {
 	const ternaryOperators = new Set<string>()
 	const binaryOperators = new Set<string>()
 	const unaryOperators = new Set<string>()

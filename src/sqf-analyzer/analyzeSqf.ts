@@ -1,7 +1,7 @@
-import { Node } from '@/parser/parser'
+import { SqfNode } from '@/sqf-parser/parseSqf'
 import { walk } from '@/utils/walk'
 
-export const analyze = (node: Node) => {
+export const analyze = (node: SqfNode) => {
 	const variables = new Map<
 		string,
 		{ originalName: string; assignments: [from: number, to: number][] }

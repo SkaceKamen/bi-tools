@@ -1,9 +1,9 @@
 import { glob } from 'glob'
-import { parse } from './parser/parser'
 import fs from 'fs'
-import { preprocess } from './parser/preprocessor'
-import { tokenize } from './parser/tokenizer'
-import { lint } from './linter/lint'
+import { lintSqf } from './sqf-linter/lintSqf'
+import { preprocess } from './preprocessor/preprocess'
+import { tokenizeSqf } from './sqf-parser/tokenizeSqf'
+import { parseSqf } from './sqf-parser/parseSqf'
 
 async function main() {
 	const files = await glob(
@@ -19,9 +19,9 @@ async function main() {
 			const file = await fs.promises.readFile(filePath)
 			const contents = file.toString()
 			const preprocessed = preprocess(contents)
-			const tokens = tokenize(preprocessed.code)
-			const parsed = parse(tokens, preprocessed.code)
-			const lintIssues = lint(parsed, preprocessed.code)
+			const tokens = tokenizeSqf(preprocessed.code)
+			const parsed = parseSqf(tokens, preprocessed.code)
+			const lintIssues = lintSqf(parsed, preprocessed.code)
 
 			if (lintIssues.length > 0) {
 				console.log(filePath)

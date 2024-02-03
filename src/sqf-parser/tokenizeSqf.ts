@@ -1,9 +1,9 @@
-type TokenRange = {
+type SqfTokenRange = {
 	from: number
 	to: number
 }
 
-export type Token = {
+export type SqfToken = {
 	type:
 		| 'keyword'
 		| 'identifier'
@@ -13,7 +13,7 @@ export type Token = {
 		| 'line-comment'
 		| 'multi-line-comment'
 	contents: string
-	position: TokenRange
+	position: SqfTokenRange
 }
 
 const KEYWORDS = [
@@ -53,9 +53,9 @@ const NUMBER_REST = /[0-9\.]/
 const IDENTIFIER_START = /[a-z_]/i
 const IDENTIFIER_REST = /[a-z0-9_]/i
 
-export const tokenize = (input: string): Token[] => {
+export const tokenizeSqf = (input: string): SqfToken[] => {
 	let offset = 0
-	const tokens = [] as Token[]
+	const tokens = [] as SqfToken[]
 
 	const parseError = (error: string) => {
 		// console.log(JSON.stringify(tokens, null, 2))
