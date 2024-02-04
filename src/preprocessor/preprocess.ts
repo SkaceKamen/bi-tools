@@ -255,8 +255,6 @@ export const preprocess = (
 		if (current === '#') {
 			const command = parseCommand()
 
-			console.log(index, 'command', command)
-
 			switch (command) {
 				case 'include': {
 					const mappedOffsetStart = getMappedOffsetAt(macroStart)
@@ -311,7 +309,7 @@ export const preprocess = (
 
 					const mappedValueOffsetStart = getMappedOffsetAt(index)
 
-					const value = applyMacros(parseMacroValue())
+					const value = parseMacroValue()
 
 					const mappedOffsetEnd = getMappedOffsetAt(index)
 

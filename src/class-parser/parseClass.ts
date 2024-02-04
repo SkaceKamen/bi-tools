@@ -22,12 +22,21 @@ type ClassClassDeclarationNode = ClassBaseNode & {
 	body: (ClassClassDeclarationNode | ClassAssignmentNode)[]
 }
 
-type ClassAssignmentNode = ClassLiteralAssignmentNode | ClassArrayAssignmentNode
+type ClassAssignmentNode =
+	| ClassLiteralAssignmentNode
+	| ClassArrayAssignmentNode
+	| ClassSqfCodeAssignmentNode
 
 type ClassLiteralAssignmentNode = ClassBaseNode & {
 	type: 'literal-assignment'
 	name: ClassToken
 	init: ClassLiteralNode
+}
+
+type ClassSqfCodeAssignmentNode = ClassBaseNode & {
+	type: 'sqf-assignment'
+	name: ClassToken
+	init: ClassSqfCode
 }
 
 type ClassArrayAssignmentNode = ClassBaseNode & {
@@ -47,7 +56,16 @@ type ClassLiteralNode = ClassBaseNode & {
 	raw: string
 }
 
-export class ClassParserError extends Error {}
+type ClassSqfCode = ClassBaseNode & {
+	type: 'sqf-code'
+	raw: string
+}
+
+export class ClassParserError extends Error {
+	constructor(message: string, public token: SqfToken) {
+		super(message)
+	}
+}
 
 export const parseClass = (
 	tokens: SqfToken[],
@@ -62,18 +80,12 @@ export const parseClass = (
 	)
 
 	const raise = (token: SqfToken, message: string) => {
-		const offset = token.position.from
-		const line = source.slice(0, offset).split('\n').length
-		const lastLineIndex = source.slice(0, offset).lastIndexOf('\n')
-
 		debug &&
 			console.trace(
 				`(at ${index}) Raising: ${message} (at ${token.type} "${token.contents}")`
 			)
 
-		throw new ClassParserError(
-			`Parse error at ${line}:${offset - lastLineIndex}: ${message}`
-		)
+		throw new ClassParserError(message, token)
 	}
 
 	const peekToken = (offset: number) => {
@@ -107,7 +119,7 @@ export const parseClass = (
 		const body = [] as (ClassClassDeclarationNode | ClassAssignmentNode)[]
 
 		while (index < tokens.length) {
-			if (peekToken(0).type === 'eof') {
+			if (peekToken(0).type === 'eof' || peekToken(0).contents === '}') {
 				break
 			}
 
@@ -118,7 +130,7 @@ export const parseClass = (
 
 			const token = peekToken(0)
 
-			if (peekToken(0).type === 'eof') {
+			if (peekToken(0).type === 'eof' || peekToken(0).contents === '}') {
 				break
 			} else if (token.type === 'keyword' && token.contents === 'class') {
 				body.push(parseClassDeclaration())
@@ -187,10 +199,23 @@ export const parseClass = (
 		const nextToken = peekToken(0)
 		if (nextToken.type === 'keyword' && nextToken.contents === '=') {
 			popToken()
-			const init = parseLiteral()
+
+			if (peekToken(0).type === 'string' || peekToken(0).type === 'number') {
+				const init = parseLiteral()
+
+				return {
+					type: 'literal-assignment',
+					name: nameToken,
+					init,
+					start: nameToken.position.from,
+					end: init.end,
+				}
+			}
+
+			const init = parseSqfCode()
 
 			return {
-				type: 'literal-assignment',
+				type: 'sqf-assignment',
 				name: nameToken,
 				init,
 				start: nameToken.position.from,
@@ -282,6 +307,48 @@ export const parseClass = (
 		}
 
 		return raise(token, 'Expected string or number')
+	}
+
+	// TODO: This is not really a correct way, but it kind of works for now
+	const parseSqfCode = (): ClassSqfCode => {
+		const parseBrackets = () => {
+			const token = popToken()
+			if (token.contents !== '(') {
+				raise(token, 'Expected "("')
+			}
+
+			const inside = parseSqfCode()
+
+			const end = popToken()
+			if (end.contents !== ')') {
+				raise(token, 'Expected ")"')
+			}
+
+			return '(' + inside.raw + ')'
+		}
+
+		let result = ''
+
+		while (true) {
+			const token = peekToken(0)
+			if (token.contents === '(') {
+				result += parseBrackets()
+			} else if (
+				token.contents === ';' ||
+				token.type === 'eof' ||
+				token.contents === ')'
+			) {
+				return {
+					type: 'sqf-code',
+					raw: result,
+					start: token.position.from,
+					end: token.position.to,
+				}
+			} else {
+				result += token.contents
+				popToken()
+			}
+		}
 	}
 
 	return {

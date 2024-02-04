@@ -1,6 +1,157 @@
 {
   "type": "file",
-  "body": [],
+  "body": [
+    {
+      "type": "class-declaration",
+      "name": {
+        "type": "identifier",
+        "contents": "ZTitle",
+        "position": {
+          "from": 4280,
+          "to": 4286
+        }
+      },
+      "start": 4274,
+      "extends": {
+        "type": "identifier",
+        "contents": "ZUI_Static",
+        "position": {
+          "from": 4288,
+          "to": 4298
+        }
+      },
+      "body": [
+        {
+          "type": "array-assignment",
+          "name": {
+            "type": "identifier",
+            "contents": "background",
+            "position": {
+              "from": 4302,
+              "to": 4312
+            }
+          },
+          "init": {
+            "type": "array",
+            "elements": [
+              {
+                "type": "literal",
+                "value": "\"(profilenamespace getvariable ['GUI_BCG_RGB_R',0.13])\"",
+                "raw": "\"(profilenamespace getvariable ['GUI_BCG_RGB_R',0.13])\"",
+                "start": 4319,
+                "end": 4374
+              },
+              {
+                "type": "literal",
+                "value": "\"(profilenamespace getvariable ['GUI_BCG_RGB_G',0.54])\"",
+                "raw": "\"(profilenamespace getvariable ['GUI_BCG_RGB_G',0.54])\"",
+                "start": 4376,
+                "end": 4431
+              },
+              {
+                "type": "literal",
+                "value": "\"(profilenamespace getvariable ['GUI_BCG_RGB_B',0.21])\"",
+                "raw": "\"(profilenamespace getvariable ['GUI_BCG_RGB_B',0.21])\"",
+                "start": 4433,
+                "end": 4488
+              },
+              {
+                "type": "literal",
+                "value": "\"(profilenamespace getvariable ['GUI_BCG_RGB_A',0.8])\"",
+                "raw": "\"(profilenamespace getvariable ['GUI_BCG_RGB_A',0.8])\"",
+                "start": 4490,
+                "end": 4544
+              }
+            ],
+            "start": 4317,
+            "end": 4546
+          },
+          "start": 4302,
+          "end": 4546
+        },
+        {
+          "type": "literal-assignment",
+          "name": {
+            "type": "identifier",
+            "contents": "font",
+            "position": {
+              "from": 4549,
+              "to": 4553
+            }
+          },
+          "init": {
+            "type": "literal",
+            "value": "\"PuristaLight\"",
+            "raw": "\"PuristaLight\"",
+            "start": 4556,
+            "end": 4570
+          },
+          "start": 4549,
+          "end": 4570
+        },
+        {
+          "type": "sqf-assignment",
+          "name": {
+            "type": "identifier",
+            "contents": "textSize",
+            "position": {
+              "from": 4573,
+              "to": 4581
+            }
+          },
+          "init": {
+            "type": "sqf-code",
+            "raw": "(((((safezoneW/safezoneH)min1.2)/1.2)/25)*1)",
+            "start": 4636,
+            "end": 4637
+          },
+          "start": 4573,
+          "end": 4637
+        },
+        {
+          "type": "literal-assignment",
+          "name": {
+            "type": "identifier",
+            "contents": "height",
+            "position": {
+              "from": 4639,
+              "to": 4645
+            }
+          },
+          "init": {
+            "type": "literal",
+            "value": "0.05",
+            "raw": "0.05",
+            "start": 4648,
+            "end": 4653
+          },
+          "start": 4639,
+          "end": 4653
+        },
+        {
+          "type": "literal-assignment",
+          "name": {
+            "type": "identifier",
+            "contents": "heightType",
+            "position": {
+              "from": 4655,
+              "to": 4665
+            }
+          },
+          "init": {
+            "type": "literal",
+            "value": "\"absolute\"",
+            "raw": "\"absolute\"",
+            "start": 4668,
+            "end": 4678
+          },
+          "start": 4655,
+          "end": 4678
+        }
+      ],
+      "end": 4681
+    }
+  ],
   "start": 0,
-  "end": 2782
+  "end": 4682
 }

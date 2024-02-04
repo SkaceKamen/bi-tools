@@ -4,6 +4,8 @@ export const getMappedOffsetAt = (
 	sourceMap: SourceMapItem[],
 	offset: number
 ) => {
+	sourceMap.sort((a, b) => a.offset - b.offset)
+
 	// Note this relies on source maps being sorted by offset
 	let item = null
 	for (const sourceMapItem of sourceMap) {
