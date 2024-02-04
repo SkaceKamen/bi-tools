@@ -1,9 +1,23 @@
 import fs from 'fs'
 import path from 'path'
+import { getMappedOffsetAt as getMappedOffsetAtOriginal } from './getMappedOffsetAt'
 
 type Options = {
 	includeBaseDir: string
 	debug?: boolean
+}
+
+export type SourceMapItem = {
+	offset: number
+	fileOffset: number
+	file: string | null
+}
+
+type MacroItem = {
+	args: string[]
+	value: string
+	file: string | null
+	location: [from: number, to: number]
 }
 
 const COMMANDS = ['include', 'define', 'ifdef', 'ifndef'] as const
@@ -14,35 +28,17 @@ export class PreprocessorError extends Error {}
 
 export type Preprocessed = {
 	code: string
-	defines: Map<
-		string,
-		{
-			args: string[]
-			value: string
-			location: [from: number, to: number]
-		}
-	>
-	sourceMap: {
-		from: number
-		to: number
-		file: string
-	}[]
+	defines: Map<string, MacroItem>
+	sourceMap: SourceMapItem[]
 }
 
 export const preprocess = (
 	code: string,
 	{ includeBaseDir, debug = false }: Options
 ): Preprocessed => {
-	const defines = new Map<
-		string,
-		{
-			args: string[]
-			value: string
-			location: [from: number, to: number]
-		}
-	>()
+	const defines = new Map<string, MacroItem>()
 
-	const sourceMap = []
+	const sourceMap = [] as SourceMapItem[]
 
 	let index = 0
 
@@ -193,13 +189,54 @@ export const preprocess = (
 		return value
 	}
 
-	const applyMacros = (input: string) => {
-		for (const [name, macro] of defines) {
-			const { value } = macro
-			const regex = new RegExp(`${name}`, 'g')
+	const getMappedOffsetAt = (offset: number) =>
+		getMappedOffsetAtOriginal(sourceMap, offset)
 
-			// TODO: Apply args
-			input = input.replace(regex, value)
+	const applyMacros = (
+		input: string,
+		sourceMapOptions?: { offset: number }
+	) => {
+		const macros = Array.from(defines.entries()).sort(
+			(a, b) => a[0].length - b[0].length
+		)
+
+		let internalIndex = 0
+		while (internalIndex < input.length) {
+			const matchingMacro = macros.find(([name]) => {
+				return input.slice(internalIndex, internalIndex + name.length) === name
+			})
+
+			if (matchingMacro) {
+				const mappedOffset = sourceMapOptions
+					? getMappedOffsetAt(sourceMapOptions.offset + internalIndex)
+					: null
+
+				const [name, macro] = matchingMacro
+				const { value } = macro
+
+				// TODO: Apply args!
+
+				input =
+					input.slice(0, internalIndex) +
+					value +
+					input.slice(internalIndex + name.length)
+
+				if (sourceMapOptions && mappedOffset) {
+					sourceMap.push({
+						offset: sourceMapOptions.offset + internalIndex,
+						fileOffset: macro.location[0],
+						file: macro.file,
+					})
+
+					sourceMap.push({
+						offset: sourceMapOptions.offset + internalIndex + macro.location[1],
+						fileOffset: mappedOffset.offset,
+						file: mappedOffset.file,
+					})
+				}
+			} else {
+				internalIndex++
+			}
 		}
 
 		return input
@@ -217,6 +254,8 @@ export const preprocess = (
 
 			switch (command) {
 				case 'include': {
+					const mappedOffsetStart = getMappedOffsetAt(macroStart)
+
 					skipWhitespace()
 
 					const file = parseIncludeArg()
@@ -235,18 +274,22 @@ export const preprocess = (
 					}
 
 					for (const item of included.sourceMap) {
-						// TODO: This needs to be adjusted according to our own source map!
 						sourceMap.push({
-							from: item.from,
-							to: item.to,
-							file: file,
+							...item,
+							offset: item.offset + macroStart,
 						})
 					}
 
 					sourceMap.push({
-						from: macroStart,
-						to: macroStart + included.code.length,
+						offset: macroStart,
+						fileOffset: 0,
 						file,
+					})
+
+					sourceMap.push({
+						offset: macroStart + included.code.length,
+						fileOffset: mappedOffsetStart.offset,
+						file: mappedOffsetStart.file,
 					})
 
 					break
@@ -261,14 +304,18 @@ export const preprocess = (
 
 					const value = applyMacros(parseMacroValue())
 
+					const mappedOffsetStart = getMappedOffsetAt(index)
+
 					debug && console.log('define', { name, args, value })
 
 					defines.set(name, {
 						args,
 						value,
+						file: mappedOffsetStart.file,
 						location: [macroStart, index],
 					})
 
+					// TODO: This doesn't require mapping, but will break when there a escaped newline in the macro
 					code =
 						code.slice(0, macroStart) +
 						' '.repeat(index - macroStart) +
@@ -312,7 +359,7 @@ export const preprocess = (
 
 			code =
 				code.slice(0, lineStart) +
-				applyMacros(code.slice(lineStart, index)) +
+				applyMacros(code.slice(lineStart, index), { offset: lineStart }) +
 				code.slice(index)
 		}
 	}

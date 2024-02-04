@@ -3,6 +3,7 @@ import { dirname } from 'path'
 import { parseClass } from './class-parser/parseClass'
 import { tokenizeClass } from './class-parser/tokenizeClass'
 import { preprocess } from './preprocessor/preprocess'
+import { getMappedOffsetAt } from './preprocessor/getMappedOffsetAt'
 
 async function main() {
 	const fileName = process.argv[2]
@@ -15,6 +16,8 @@ async function main() {
 	})
 
 	await fs.promises.writeFile('preprocessed.hpp', preprocessed.code)
+
+	console.log(getMappedOffsetAt(preprocessed.sourceMap, 100))
 
 	const tokens = tokenizeClass(preprocessed.code)
 
