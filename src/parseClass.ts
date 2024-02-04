@@ -20,7 +20,7 @@ async function main() {
 
 	console.log(preprocessed.sourceMap)
 
-	const offset = getMappedOffsetAt(preprocessed.sourceMap, 4552)
+	const offset = getMappedOffsetAt(preprocessed.sourceMap, 4561)
 	console.log({
 		offset: offset.offset,
 		location: getLocationFromOffset(

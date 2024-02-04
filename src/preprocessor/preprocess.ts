@@ -223,15 +223,19 @@ export const preprocess = (
 					input.slice(internalIndex + name.length)
 
 				if (sourceMapOptions && mappedOffset) {
+					debug && console.log('mappedOffset of macro', name, mappedOffset)
+
 					sourceMap.push({
 						offset: sourceMapOptions.offset + internalIndex,
 						fileOffset: macro.valueLocation[0],
 						file: macro.file,
 					})
 
+					// TODO: The file offset is wrong for some reason
 					sourceMap.push({
 						offset: sourceMapOptions.offset + internalIndex + value.length,
-						fileOffset: mappedOffset.offset,
+						// TODO: This will have to also include the args
+						fileOffset: mappedOffset.offset + name.length,
 						file: mappedOffset.file,
 					})
 				}
@@ -289,7 +293,7 @@ export const preprocess = (
 
 					sourceMap.push({
 						offset: macroStart + included.code.length,
-						fileOffset: mappedOffsetStart.offset,
+						fileOffset: mappedOffsetStart.offset + (index - macroStart),
 						file: mappedOffsetStart.file,
 					})
 
