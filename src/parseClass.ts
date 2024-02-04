@@ -4,6 +4,7 @@ import { parseClass } from './class-parser/parseClass'
 import { tokenizeClass } from './class-parser/tokenizeClass'
 import { preprocess } from './preprocessor/preprocess'
 import { getMappedOffsetAt } from './preprocessor/getMappedOffsetAt'
+import { getLocationFromOffset } from './preprocessor/getLocationFromOffset'
 
 async function main() {
 	const fileName = process.argv[2]
@@ -17,7 +18,16 @@ async function main() {
 
 	await fs.promises.writeFile('preprocessed.hpp', preprocessed.code)
 
-	console.log(getMappedOffsetAt(preprocessed.sourceMap, 100))
+	const offset = getMappedOffsetAt(preprocessed.sourceMap, 4300)
+	console.log({
+		location: getLocationFromOffset(
+			offset.offset,
+			offset.file === null
+				? contents
+				: (await fs.promises.readFile(offset.file)).toString()
+		),
+		file: offset.file,
+	})
 
 	const tokens = tokenizeClass(preprocessed.code)
 

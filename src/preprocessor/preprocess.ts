@@ -283,7 +283,7 @@ export const preprocess = (
 					sourceMap.push({
 						offset: macroStart,
 						fileOffset: 0,
-						file,
+						file: path.join(includeBaseDir, file),
 					})
 
 					sourceMap.push({
