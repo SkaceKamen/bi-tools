@@ -4,14 +4,13 @@ import { analyze } from './sqf-analyzer/analyzeSqf'
 import { tokenizeSqf } from './sqf-parser/tokenizeSqf'
 import { preprocess } from './preprocessor/preprocess'
 import { parseSqf } from './sqf-parser/parseSqf'
-import path from 'path'
 
 async function main() {
 	const file = await fs.promises.readFile(process.argv[2])
 	const contents = file.toString()
 
 	const preprocessed = preprocess(contents, {
-		includeBaseDir: path.dirname(process.argv[2]),
+		filename: process.argv[2],
 	})
 
 	await fs.promises.writeFile('processed.sqf', preprocessed.code)

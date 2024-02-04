@@ -1,5 +1,4 @@
 import fs from 'fs'
-import { dirname } from 'path'
 import { ClassParserError, parseClass } from './class-parser/parseClass'
 import { tokenizeClass } from './class-parser/tokenizeClass'
 import { preprocess } from './preprocessor/preprocess'
@@ -12,17 +11,15 @@ async function main() {
 	const contents = file.toString()
 
 	const preprocessed = preprocess(contents, {
-		includeBaseDir: dirname(fileName),
-		debug: false,
+		filename: fileName,
+		debug: true,
 	})
 
 	await fs.promises.writeFile('preprocessed.hpp', preprocessed.code)
 
 	console.log(preprocessed.sourceMap)
 
-	/*
-	TEST:
-	const offset = getMappedOffsetAt(preprocessed.sourceMap, 4561)
+	const offset = getMappedOffsetAt(preprocessed.sourceMap, 4680, fileName)
 	console.log({
 		offset: offset.offset,
 		location: getLocationFromOffset(
@@ -33,7 +30,6 @@ async function main() {
 		),
 		file: offset.file,
 	})
-	*/
 
 	const tokens = tokenizeClass(preprocessed.code)
 
@@ -52,7 +48,8 @@ async function main() {
 		if (err instanceof ClassParserError) {
 			const mappedOffset = getMappedOffsetAt(
 				preprocessed.sourceMap,
-				err.token.position.from
+				err.token.position.from,
+				fileName
 			)
 
 			const actualLocation = getLocationFromOffset(

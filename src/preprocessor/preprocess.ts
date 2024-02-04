@@ -3,20 +3,21 @@ import path from 'path'
 import { getMappedOffsetAt as getMappedOffsetAtOriginal } from './getMappedOffsetAt'
 
 type Options = {
-	includeBaseDir: string
+	filename: string
 	debug?: boolean
+	defines?: Map<string, MacroItem>
 }
 
 export type SourceMapItem = {
 	offset: number
 	fileOffset: number
-	file: string | null
+	file: string
 }
 
 type MacroItem = {
 	args: string[]
 	value: string
-	file: string | null
+	file: string
 	location: [from: number, to: number]
 	valueLocation: [from: number, to: number]
 }
@@ -35,10 +36,8 @@ export type Preprocessed = {
 
 export const preprocess = (
 	code: string,
-	{ includeBaseDir, debug = false }: Options
+	{ filename, debug = false, defines = new Map<string, MacroItem>() }: Options
 ): Preprocessed => {
-	const defines = new Map<string, MacroItem>()
-
 	const sourceMap = [] as SourceMapItem[]
 
 	let index = 0
@@ -191,7 +190,7 @@ export const preprocess = (
 	}
 
 	const getMappedOffsetAt = (offset: number) =>
-		getMappedOffsetAtOriginal(sourceMap, offset)
+		getMappedOffsetAtOriginal(sourceMap, offset, filename)
 
 	const applyMacros = (
 		input: string,
@@ -215,25 +214,35 @@ export const preprocess = (
 				const [name, macro] = matchingMacro
 				const { value } = macro
 
-				// TODO: Apply args!
+				// TODO: Is this good idea?
+				let fullyResolvedValue = value
+				while (true) {
+					const newFullyResolvedValue = applyMacros(fullyResolvedValue)
+					if (newFullyResolvedValue === fullyResolvedValue) {
+						break
+					}
 
+					fullyResolvedValue = newFullyResolvedValue
+				}
+
+				// TODO: Apply args!
 				input =
 					input.slice(0, internalIndex) +
-					value +
+					fullyResolvedValue +
 					input.slice(internalIndex + name.length)
 
 				if (sourceMapOptions && mappedOffset) {
-					debug && console.log('mappedOffset of macro', name, mappedOffset)
-
 					sourceMap.push({
 						offset: sourceMapOptions.offset + internalIndex,
 						fileOffset: macro.valueLocation[0],
 						file: macro.file,
 					})
 
-					// TODO: The file offset is wrong for some reason
 					sourceMap.push({
-						offset: sourceMapOptions.offset + internalIndex + value.length,
+						offset:
+							sourceMapOptions.offset +
+							internalIndex +
+							fullyResolvedValue.length,
 						// TODO: This will have to also include the args
 						fileOffset: mappedOffset.offset + name.length,
 						file: mappedOffset.file,
@@ -262,13 +271,15 @@ export const preprocess = (
 					skipWhitespace()
 
 					const file = parseIncludeArg()
+					const filePath = path.join(path.dirname(filename), file)
 
 					skipWhitespace()
 
-					const included = preprocess(
-						fs.readFileSync(path.join(includeBaseDir, file), 'utf-8'),
-						{ includeBaseDir: path.dirname(file) }
-					)
+					const included = preprocess(fs.readFileSync(filePath, 'utf-8'), {
+						filename: filePath,
+						defines,
+						debug,
+					})
 
 					code = code.slice(0, macroStart) + included.code + code.slice(index)
 
@@ -277,16 +288,13 @@ export const preprocess = (
 					}
 
 					for (const item of included.sourceMap) {
-						sourceMap.push({
-							...item,
-							offset: item.offset + macroStart,
-						})
+						sourceMap.push(item)
 					}
 
 					sourceMap.push({
 						offset: macroStart,
 						fileOffset: 0,
-						file: path.join(includeBaseDir, file),
+						file: filePath,
 					})
 
 					sourceMap.push({
@@ -309,6 +317,7 @@ export const preprocess = (
 
 					const mappedValueOffsetStart = getMappedOffsetAt(index)
 
+					// TODO: Should we apply the macros here?
 					const value = parseMacroValue()
 
 					const mappedOffsetEnd = getMappedOffsetAt(index)

@@ -2,9 +2,10 @@ import { SourceMapItem } from './preprocess'
 
 export const getMappedOffsetAt = (
 	sourceMap: SourceMapItem[],
-	offset: number
+	offset: number,
+	defaultFile: string
 ) => {
-	sourceMap.sort((a, b) => a.offset - b.offset)
+	//sourceMap.sort((a, b) => a.offset - b.offset)
 
 	// Note this relies on source maps being sorted by offset
 	let item = null
@@ -17,7 +18,7 @@ export const getMappedOffsetAt = (
 	}
 
 	if (!item) {
-		return { file: null, offset }
+		return { file: defaultFile, offset }
 	}
 
 	return { offset: item.fileOffset + (offset - item.offset), file: item.file }
