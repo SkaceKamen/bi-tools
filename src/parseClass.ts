@@ -18,8 +18,11 @@ async function main() {
 
 	await fs.promises.writeFile('preprocessed.hpp', preprocessed.code)
 
-	const offset = getMappedOffsetAt(preprocessed.sourceMap, 4300)
+	console.log(preprocessed.sourceMap)
+
+	const offset = getMappedOffsetAt(preprocessed.sourceMap, 4552)
 	console.log({
+		offset: offset.offset,
 		location: getLocationFromOffset(
 			offset.offset,
 			offset.file === null

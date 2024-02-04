@@ -18,6 +18,7 @@ type MacroItem = {
 	value: string
 	file: string | null
 	location: [from: number, to: number]
+	valueLocation: [from: number, to: number]
 }
 
 const COMMANDS = ['include', 'define', 'ifdef', 'ifndef'] as const
@@ -224,12 +225,12 @@ export const preprocess = (
 				if (sourceMapOptions && mappedOffset) {
 					sourceMap.push({
 						offset: sourceMapOptions.offset + internalIndex,
-						fileOffset: macro.location[0],
+						fileOffset: macro.valueLocation[0],
 						file: macro.file,
 					})
 
 					sourceMap.push({
-						offset: sourceMapOptions.offset + internalIndex + macro.location[1],
+						offset: sourceMapOptions.offset + internalIndex + value.length,
 						fileOffset: mappedOffset.offset,
 						file: mappedOffset.file,
 					})
@@ -296,15 +297,19 @@ export const preprocess = (
 				}
 
 				case 'define': {
+					const mappedOffsetStart = getMappedOffsetAt(index)
+
 					expectWhitespace()
 
 					const { name, args } = parseMacroName()
 
 					expectWhitespace()
 
+					const mappedValueOffsetStart = getMappedOffsetAt(index)
+
 					const value = applyMacros(parseMacroValue())
 
-					const mappedOffsetStart = getMappedOffsetAt(index)
+					const mappedOffsetEnd = getMappedOffsetAt(index)
 
 					debug && console.log('define', { name, args, value })
 
@@ -312,7 +317,11 @@ export const preprocess = (
 						args,
 						value,
 						file: mappedOffsetStart.file,
-						location: [macroStart, index],
+						location: [mappedOffsetStart.offset, mappedOffsetEnd.offset],
+						valueLocation: [
+							mappedValueOffsetStart.offset,
+							mappedOffsetEnd.offset,
+						],
 					})
 
 					// TODO: This doesn't require mapping, but will break when there a escaped newline in the macro
