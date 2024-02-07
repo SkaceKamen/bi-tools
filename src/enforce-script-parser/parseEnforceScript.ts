@@ -65,12 +65,25 @@ export const parseEnforceScript = (
 	}
 
 	/**
-	 * Code: '' | ';'+ | PrimaryExpression (';'? PrimaryExpression)*
-	 * PrimaryExpression: ClassDeclaration | EnumDeclaration | TypedefDeclaration | Assignment
-	 * EnumDeclaration: 'enum' Identifier '{' EnumField (',' EnumField)* '}'
+	 * Code: RootExpression*
+	 * RootExpression: ClassDeclaration | EnumDeclaration | TypedefDeclaration | Assignment | FunctionDeclaration
+	 * EnumDeclaration: 'enum' Identifier '{' EnumField (',' EnumField)* '}' ';'?
 	 * EnumField: Identifier ('=' (Number | String))?
-	 * TypedefDeclaration: 'typedef' Type Identifier
-	 * ClassDeclaration: ('private')? ('internal')? ('sealed')? 'class' Identifier ((':' | 'extends') Identifier)? '{' Code '}'
-	 * ClassCode: MemberDeclaration | MethodDeclaration
+	 * TypedefDeclaration: 'typedef' Type Identifier ';'?
+	 * ClassDeclaration: ('private')? ('internal')? ('sealed')? 'class' Identifier ((':' | 'extends') Identifier)? '{' ClassBody '}'
+	 * ClassBody: MemberDeclaration | MethodDeclaration
+	 * MemberDeclaration: ('private' | 'protected')? ('static')? Type Identifier ('=' Expression)? ';'
+	 * MethodDeclaration: ('private' | 'protected')? ('static')? Type '~'? Identifier '(' ParameterList ')' ('=' Expression)? '{' Statement* '}'
+	 * Assignment: Identifier ('=' Expression)? ';'
+	 * FunctionDeclaration: ('private' | 'protected')? ('static')? Type Identifier '(' ParameterList ')' ('=' Expression)? '{' Statement* '}'
+	 * ParameterList: (Type Identifier (',' Type Identifier)*)?
+	 * Statement: IfStatement | ForStatement | ForeachStatement | SwitchStatement | ReturnStatement | ExpressionStatement
+	 * IfStatement: 'if' '(' Expression ')' '{' Statement* '}' ('else' '{' Statement* '}')?
+	 * ForStatement: 'for' '(' Expression? ';' Expression? ';' Expression? ')' '{' Statement* '}'
+	 * ForeachStatement: 'foreach' '(' Type Identifier 'in' Expression ')' '{' Statement* '}'
+	 * SwitchStatement: 'switch' '(' Expression ')' '{' 'case' Expression ':' Statement* 'default' ':' Statement* '}'
+	 * ReturnStatement: 'return' Expression? ';'
+	 * ExpressionStatement: Expression ';'
+	 * Expression: AssignmentExpression | NonAssignmentExpression
 	 */
 }
