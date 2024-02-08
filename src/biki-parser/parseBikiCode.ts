@@ -1,14 +1,43 @@
 import Parser from 'wikiparser-node'
 import { bikiConfig } from './bikiConfig'
 
-const SYNTAX_MATCH = /^s([1-9][0-9]*)$/
-const PARAM_MATCH = /^p([1-9][0-9]*)$/
-const RETURNS_MATCH = /^r([1-9][0-9]*)$/
+export type CommandOrFunctionInfo = {
+	description?: string
+	compatibility: {
+		game: string
+		version: string
+	}[]
+	syntaxes: SyntaxInfo[]
+}
+
+export type SyntaxInfo = {
+	code: string
+	since?: string
+	args: SyntaxInfoArg[]
+	returns?: {
+		type?: string
+		desc?: string
+	}
+}
+
+export type SyntaxInfoArg = {
+	name: string
+	type?: string
+	desc?: string
+	optional?: boolean
+	since?: string
+}
+
+const SYNTAX_PATTERN = /^s([1-9][0-9]*)$/
+const PARAM_PATTERN = /^p([1-9][0-9]*)$/
+const RETURNS_PATTERN = /^r([1-9][0-9]*)$/
 const PARAM_DESC_PATTERN1 = /^(\w+): (\w+) - (.+)$/
 const PARAM_DESC_PATTERN2 = /^(\w+): (\w+)$/
 const RETURNS_DESC_PATTERN1 = /^(\w+) - (.+)$/
 const RETURNS_DESC_PATTERN2 = /^(\w+)$/
 const PARAM_OPTIONAL_PATTERN = /^\s*\(\s*optional/i
+const GAME_PARAM_PATTERN = /^game(\d+)$/
+const VERSION_PARAM_PATTERN = /^version(\d+)$/
 
 const innerText = (node: Parser.Token | Parser.AstText | undefined): string => {
 	if (node?.type === undefined) {
@@ -45,26 +74,25 @@ const innerText = (node: Parser.Token | Parser.AstText | undefined): string => {
 	return node?.childNodes?.map((node) => innerText(node)).join('') ?? ''
 }
 
-export const parseBikiCode = (code: string) => {
+export const parseBikiCode = (code: string): CommandOrFunctionInfo => {
 	const data = Parser.parse(code, undefined, undefined, bikiConfig)
 
 	let description = undefined as string | undefined
+
+	const compatibility = {} as Record<
+		string,
+		{
+			game: string
+			version: string
+		}
+	>
 
 	const syntaxes = {} as Record<
 		number,
 		{
 			code: string
 			since?: string
-			args: Record<
-				number,
-				{
-					name: string
-					type?: string
-					desc?: string
-					optional?: boolean
-					since?: string
-				}
-			>
+			args: Record<number, SyntaxInfoArg>
 			returns?: {
 				type?: string
 				desc?: string
@@ -93,12 +121,41 @@ export const parseBikiCode = (code: string) => {
 						continue
 					}
 
-					const syntaxMatch = SYNTAX_MATCH.exec(child.name ?? '')
-					const paramMatch = !syntaxMatch && PARAM_MATCH.exec(child.name ?? '')
+					const syntaxMatch = SYNTAX_PATTERN.exec(child.name ?? '')
+					const paramMatch =
+						!syntaxMatch && PARAM_PATTERN.exec(child.name ?? '')
 					const returnsMatch =
-						!syntaxMatch && !paramMatch && RETURNS_MATCH.exec(child.name ?? '')
+						!syntaxMatch &&
+						!paramMatch &&
+						RETURNS_PATTERN.exec(child.name ?? '')
+					const gameMatch = GAME_PARAM_PATTERN.exec(child.name ?? '')
+					const versionMatch = VERSION_PARAM_PATTERN.exec(child.name ?? '')
 
-					if (syntaxMatch) {
+					if (gameMatch) {
+						const index = parseInt(gameMatch[1])
+
+						if (!compatibility[index]) {
+							compatibility[index] = {
+								game: '',
+								version: '',
+							}
+						}
+
+						compatibility[index].game = innerText(child.childNodes?.[1]).trim()
+					} else if (versionMatch) {
+						const index = parseInt(versionMatch[1])
+
+						if (!compatibility[index]) {
+							compatibility[index] = {
+								game: '',
+								version: '',
+							}
+						}
+
+						compatibility[index].version = innerText(
+							child.childNodes?.[1]
+						).trim()
+					} else if (syntaxMatch) {
 						const syntax = getSyntax(+syntaxMatch[1])
 						syntax.code = innerText(child.childNodes?.[1]).trim() ?? ''
 					} else if (paramMatch) {
@@ -168,6 +225,7 @@ export const parseBikiCode = (code: string) => {
 
 	return {
 		description,
+		compatibility: Object.values(compatibility),
 		syntaxes: Object.values(syntaxes).map((s) => ({
 			...s,
 			args: Object.values(s.args),
