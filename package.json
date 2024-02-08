@@ -27,6 +27,7 @@
     "@": "./build"
   },
   "dependencies": {
-    "glob": "^10.3.10"
+    "glob": "^10.3.10",
+    "wikiparser-node": "^1.4.4"
   }
 }

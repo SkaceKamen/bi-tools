@@ -3477,6 +3477,7 @@ __metadata:
     tsconfig-paths: ^4.2.0
     typescript: ^5.0.4
     vitest: ^1.2.2
+    wikiparser-node: ^1.4.4
   languageName: unknown
   linkType: soft
 
@@ -4102,6 +4103,13 @@ __metadata:
   bin:
     why-is-node-running: cli.js
   checksum: 50820428f6a82dfc3cbce661570bcae9b658723217359b6037b67e495255409b4c8bc7931745f5c175df71210450464517cab32b2f7458ac9c40b4925065200a
+  languageName: node
+  linkType: hard
+
+"wikiparser-node@npm:^1.4.4":
+  version: 1.4.4
+  resolution: "wikiparser-node@npm:1.4.4"
+  checksum: 9c098e42c1046fb5dfc926d3918a3c4368d5880134db6a50ef32d6ae910c15e6bf1e1a85003c8f515d6071661053bc5a4a0dd0d4b63526ea615a32cc4ed5290c
   languageName: node
   linkType: hard
 
