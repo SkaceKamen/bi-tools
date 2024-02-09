@@ -16,10 +16,24 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@bi-tools/cmd@workspace:packages/cmd"
   dependencies:
+    "@bi-tools/config-parser": ^1.0.0
+    "@bi-tools/enforce-script-parser": ^1.0.0
     "@bi-tools/preprocessor": ^1.0.0
     "@bi-tools/sqf-analyzer": ^1.0.0
     "@bi-tools/sqf-linter": ^1.0.0
     "@bi-tools/sqf-parser": ^1.0.0
+  languageName: unknown
+  linkType: soft
+
+"@bi-tools/config-parser@^1.0.0, @bi-tools/config-parser@workspace:packages/config-parser":
+  version: 0.0.0-use.local
+  resolution: "@bi-tools/config-parser@workspace:packages/config-parser"
+  languageName: unknown
+  linkType: soft
+
+"@bi-tools/enforce-script-parser@^1.0.0, @bi-tools/enforce-script-parser@workspace:packages/enforce-script-parser":
+  version: 0.0.0-use.local
+  resolution: "@bi-tools/enforce-script-parser@workspace:packages/enforce-script-parser"
   languageName: unknown
   linkType: soft
 

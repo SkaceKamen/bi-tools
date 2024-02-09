@@ -1,4 +1,4 @@
-import { getLocationFromOffset } from '@/preprocessor/getLocationFromOffset'
+import { getLocationFromOffset } from '@bi-tools/preprocessor'
 import { writeFile } from 'fs'
 
 export type EnforceScriptToken = {

@@ -1,28 +1,26 @@
 {
-  "compilerOptions": {
-    "incremental": true,
-    "target": "esnext",
-    "module": "commonjs",
-    "sourceMap": true,
-    "outDir": "./build", 
-    "importHelpers": true,
-    "strict": true,
-    "baseUrl": "./",
-    "skipLibCheck": true,
-    "paths": {
-      "@/*": ["src/*"]
-    },
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
-    "lib": [ "es2019" ]
-  },
-  "include": [
-    "src/**/*"
-, "packages/config-parser/src/parseConfig.ts", "packages/config-parser/src/tokenizeConfig.ts", "packages/sqf-analyzer/src/analyzeSqf.ts", "packages/enforce-script-parser/src/parseEnforceScript.ts", "packages/enforce-script-parser/src/tokenizeEnforceScript.ts"  ],
-  "exclude": [
-    "node_modules"
-  ],
-  "ts-node": {
-    "require": ["tsconfig-paths/register"]
-  }
+	"compilerOptions": {
+		"incremental": true,
+		"target": "esnext",
+		"module": "commonjs",
+		"sourceMap": true,
+		"outDir": "./dist",
+		"importHelpers": true,
+		"strict": true,
+		"skipLibCheck": true,
+		"allowSyntheticDefaultImports": true,
+		"esModuleInterop": true,
+		"lib": ["es2019"]
+	},
+	"include": ["src/**/*"],
+	"exclude": ["node_modules"],
+	"references": [
+		{ "path": "./packages/preprocessor" },
+		{ "path": "./packages/sqf-parser" },
+		{ "path": "./packages/sqf-analyzer" },
+		{ "path": "./packages/sqf-linter" },
+		{ "path": "./packages/enforce-script-parser" },
+		{ "path": "./packages/config-parser" }
+		//{ "path": "./packages/cmd" }
+	]
 }

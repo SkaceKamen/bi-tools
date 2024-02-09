@@ -1,4 +1,3 @@
-import { SqfToken } from '@/sqf-parser/tokenizeSqf'
 import { ConfigToken } from './tokenizeConfig'
 
 type ConfigBaseNode = { start: number; end: number }
@@ -62,13 +61,13 @@ type ConfigSqfCode = ConfigBaseNode & {
 }
 
 export class ConfigParserError extends Error {
-	constructor(message: string, public token: SqfToken) {
+	constructor(message: string, public token: ConfigToken) {
 		super(message)
 	}
 }
 
 export const parseConfig = (
-	tokens: SqfToken[],
+	tokens: ConfigToken[],
 	source: string,
 	{ debug = false }
 ): ConfigNode => {
@@ -79,7 +78,7 @@ export const parseConfig = (
 		(t) => t.type !== 'line-comment' && t.type !== 'multi-line-comment'
 	)
 
-	const raise = (token: SqfToken, message: string) => {
+	const raise = (token: ConfigToken, message: string) => {
 		debug &&
 			console.trace(
 				`(at ${index}) Raising: ${message} (at ${token.type} "${token.contents}")`
@@ -163,7 +162,7 @@ export const parseConfig = (
 			popToken()
 			extendsToken = popToken()
 
-			if (extendsToken.type !== 'identifier') {
+			if (extendsToken?.type !== 'identifier') {
 				raise(extendsToken, 'Expected identifier')
 			}
 		}

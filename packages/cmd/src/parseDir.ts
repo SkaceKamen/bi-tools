@@ -1,9 +1,8 @@
-import { glob } from 'glob'
+import { preprocess } from '@bi-tools/preprocessor'
+import { lintSqf } from '@bi-tools/sqf-linter'
+import { parseSqfTokens, tokenizeSqf } from '@bi-tools/sqf-parser'
 import fs from 'fs'
-import { lintSqf } from './sqf-linter/lintSqf'
-import { preprocess } from './preprocessor/preprocess'
-import { tokenizeSqf } from './sqf-parser/tokenizeSqf'
-import { parseSqf } from './sqf-parser/parseSqf'
+import { glob } from 'glob'
 
 async function main() {
 	const files = await glob(
@@ -22,7 +21,7 @@ async function main() {
 				filename: filePath,
 			})
 			const tokens = tokenizeSqf(preprocessed.code)
-			const parsed = parseSqf(tokens, preprocessed.code)
+			const parsed = parseSqfTokens(tokens, preprocessed.code)
 			const lintIssues = lintSqf(parsed, preprocessed.code)
 
 			if (lintIssues.length > 0) {

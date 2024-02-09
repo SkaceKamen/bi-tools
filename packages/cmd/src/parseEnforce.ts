@@ -1,6 +1,6 @@
+import { tokenizeEnforceScript } from '@bi-tools/enforce-script-parser'
+import { preprocess } from '@bi-tools/preprocessor'
 import fs from 'fs'
-import { tokenizeEnforceScript } from '../../enforce-script-parser/src/tokenizeEnforceScript'
-import { preprocess } from './preprocessor/preprocess'
 
 async function main() {
 	const fileName = process.argv[2]

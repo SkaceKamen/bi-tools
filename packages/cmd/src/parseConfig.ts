@@ -1,12 +1,14 @@
-import fs from 'fs'
 import {
-	ConfigParserError,
+	tokenizeConfig,
 	parseConfig,
-} from '../../config-parser/src/parseConfig'
-import { tokenizeConfig } from '../../config-parser/src/tokenizeConfig'
-import { preprocess } from './preprocessor/preprocess'
-import { getMappedOffsetAt } from './preprocessor/getMappedOffsetAt'
-import { getLocationFromOffset } from './preprocessor/getLocationFromOffset'
+	ConfigParserError,
+} from '@bi-tools/config-parser'
+import {
+	preprocess,
+	getMappedOffsetAt,
+	getLocationFromOffset,
+} from '@bi-tools/preprocessor'
+import fs from 'fs'
 
 async function main() {
 	const fileName = process.argv[2]
