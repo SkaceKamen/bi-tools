@@ -6,6 +6,10 @@ type Options = {
 	filename: string
 	debug?: boolean
 	defines?: Map<string, MacroItem>
+	resolveFn?: (
+		includeParam: string,
+		sourceFilename: string
+	) => Promise<{ contents: string; filename: string }>
 }
 
 export type SourceMapItem = {
@@ -22,7 +26,7 @@ type MacroItem = {
 	valueLocation: [from: number, to: number]
 }
 
-const COMMANDS = ['include', 'define', 'ifdef', 'ifndef'] as const
+const COMMANDS = ['include', 'define', 'ifdef', 'ifndef', 'if'] as const
 
 type Commands = (typeof COMMANDS)[number]
 
@@ -34,10 +38,25 @@ export type Preprocessed = {
 	sourceMap: SourceMapItem[]
 }
 
-export const preprocess = (
+const localFsResolve = async (includeParam: string, sourceFilename: string) => {
+	const filePath = path.join(path.dirname(sourceFilename), includeParam)
+	const contents = await fs.promises.readFile(filePath, 'utf-8')
+
+	return {
+		contents,
+		filename: filePath,
+	}
+}
+
+export const preprocess = async (
 	code: string,
-	{ filename, debug = false, defines = new Map<string, MacroItem>() }: Options
-): Preprocessed => {
+	{
+		filename,
+		debug = false,
+		defines = new Map<string, MacroItem>(),
+		resolveFn = localFsResolve,
+	}: Options
+): Promise<Preprocessed> => {
 	const sourceMap = [] as SourceMapItem[]
 
 	let index = 0
@@ -271,11 +290,13 @@ export const preprocess = (
 					skipWhitespace()
 
 					const file = parseIncludeArg()
-					const filePath = path.join(path.dirname(filename), file)
 
 					skipWhitespace()
 
-					const included = preprocess(fs.readFileSync(filePath, 'utf-8'), {
+					const resolved = await resolveFn(file, filename)
+					const filePath = resolved.filename
+
+					const included = await preprocess(resolved.contents, {
 						filename: filePath,
 						defines,
 						debug,
@@ -359,6 +380,15 @@ export const preprocess = (
 				case 'ifndef': {
 					// TODO: Implement
 
+					while (index < code.length && code[index] !== '\n') {
+						index++
+					}
+
+					code = code.slice(0, macroStart) + code.slice(index)
+					break
+				}
+
+				case 'if': {
 					while (index < code.length && code[index] !== '\n') {
 						index++
 					}

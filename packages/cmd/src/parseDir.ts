@@ -17,7 +17,7 @@ async function main() {
 		try {
 			const file = await fs.promises.readFile(filePath)
 			const contents = file.toString()
-			const preprocessed = preprocess(contents, {
+			const preprocessed = await preprocess(contents, {
 				filename: filePath,
 			})
 			const tokens = tokenizeSqf(preprocessed.code)

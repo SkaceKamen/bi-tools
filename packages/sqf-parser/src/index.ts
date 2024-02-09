@@ -6,9 +6,9 @@ export { walkSqf } from './walkSqf'
 export * from './parseSqfTokens'
 export * from './tokenizeSqf'
 
-export const parseSqf = (input: string, filename: string) => {
+export const parseSqf = async (input: string, filename: string) => {
 	// TODO: Errors should be adjusted to have proper position
-	const preprocessed = preprocess(input, { filename })
+	const preprocessed = await preprocess(input, { filename })
 	const tokens = tokenizeSqf(preprocessed.code)
 
 	return {
