@@ -66,7 +66,7 @@ export type SqfNode =
 	| SqfUnaryExpressionNode
 	| SqfVariableNode
 
-export class ParserError extends Error {
+export class SqfParserError extends Error {
 	constructor(message: string, public token: SqfToken) {
 		super(message)
 	}
@@ -92,7 +92,7 @@ export const parseSqfTokens = (
 				`(at ${index}) Raising: ${message} (at ${token.type} "${token.contents}")`
 			)
 
-		throw new ParserError(message, token)
+		throw new SqfParserError(message, token)
 	}
 
 	const peekToken = (offset = 1) => {
@@ -109,7 +109,7 @@ export const parseSqfTokens = (
 		try {
 			return fn()
 		} catch (error) {
-			if (error instanceof ParserError) {
+			if (error instanceof SqfParserError) {
 				debug &&
 					console.log('Caught at index', index, 'resetting to', beginIndex)
 				index = beginIndex
