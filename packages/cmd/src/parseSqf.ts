@@ -33,7 +33,9 @@ async function main() {
 
 	console.log(
 		JSON.stringify(
-			Object.fromEntries(analyzeSqf(parsed).variables.entries()),
+			Object.fromEntries(
+				analyzeSqf(parsed, tokens, preprocessed.code).variables.entries()
+			),
 			null,
 			2
 		)

@@ -1,5 +1,6 @@
 import { sqfOperators } from './sqfOperators'
 import { SqfToken } from './tokenizeSqf'
+import { partition } from './utils'
 
 type SqfNodeBase = { start: number; end: number }
 
@@ -65,10 +66,14 @@ export type SqfNode =
 	| SqfUnaryExpressionNode
 	| SqfVariableNode
 
-export class ParserError extends Error {}
+export class ParserError extends Error {
+	constructor(message: string, public token: SqfToken) {
+		super(message)
+	}
+}
 
 export const parseSqfTokens = (
-	tokens: SqfToken[],
+	sourceTokens: SqfToken[],
 	source: string,
 	{ debug = false } = {}
 ): SqfNode => {
@@ -76,24 +81,18 @@ export const parseSqfTokens = (
 
 	let index = 0
 
-	// Remove comments as they're useless now
-	tokens = tokens.filter(
-		(t) => t.type !== 'line-comment' && t.type !== 'multi-line-comment'
+	const [, tokens] = partition(
+		sourceTokens,
+		(t) => t.type === 'line-comment' || t.type === 'multi-line-comment'
 	)
 
 	const raise = (token: SqfToken, message: string) => {
-		const offset = token.position.from
-		const line = source.slice(0, offset).split('\n').length
-		const lastLineIndex = source.slice(0, offset).lastIndexOf('\n')
-
 		debug &&
 			console.trace(
 				`(at ${index}) Raising: ${message} (at ${token.type} "${token.contents}")`
 			)
 
-		throw new ParserError(
-			`Parse error at ${line}:${offset - lastLineIndex}: ${message}`
-		)
+		throw new ParserError(message, token)
 	}
 
 	const peekToken = (offset = 1) => {
