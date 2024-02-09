@@ -5,6 +5,3 @@ data/
 *.tsbuildinfo
 build/
 dist/
-
-*.blend1
-static/assets/

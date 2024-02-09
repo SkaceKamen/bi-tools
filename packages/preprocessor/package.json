@@ -1,7 +1,7 @@
 {
 	"name": "@bi-tools/preprocessor",
 	"version": "1.0.0",
-	"description": "",
+	"description": "Preprocess for various ARMA-related formats",
 	"author": "",
 	"license": "MIT",
 	"main": "dist/index.js"
