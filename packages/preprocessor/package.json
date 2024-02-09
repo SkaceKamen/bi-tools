@@ -1,0 +1,8 @@
+{
+	"name": "@bi-tools/preprocessor",
+	"version": "1.0.0",
+	"description": "",
+	"author": "",
+	"license": "MIT",
+	"main": "dist/index.js"
+}

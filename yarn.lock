@@ -12,6 +12,47 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@bi-tools/cmd@workspace:packages/cmd":
+  version: 0.0.0-use.local
+  resolution: "@bi-tools/cmd@workspace:packages/cmd"
+  dependencies:
+    "@bi-tools/preprocessor": ^1.0.0
+    "@bi-tools/sqf-analyzer": ^1.0.0
+    "@bi-tools/sqf-linter": ^1.0.0
+    "@bi-tools/sqf-parser": ^1.0.0
+  languageName: unknown
+  linkType: soft
+
+"@bi-tools/preprocessor@^1.0.0, @bi-tools/preprocessor@workspace:packages/preprocessor":
+  version: 0.0.0-use.local
+  resolution: "@bi-tools/preprocessor@workspace:packages/preprocessor"
+  languageName: unknown
+  linkType: soft
+
+"@bi-tools/sqf-analyzer@^1.0.0, @bi-tools/sqf-analyzer@workspace:packages/sqf-analyzer":
+  version: 0.0.0-use.local
+  resolution: "@bi-tools/sqf-analyzer@workspace:packages/sqf-analyzer"
+  dependencies:
+    "@bi-tools/sqf-parser": ^1.0.0
+  languageName: unknown
+  linkType: soft
+
+"@bi-tools/sqf-linter@^1.0.0, @bi-tools/sqf-linter@workspace:packages/sqf-linter":
+  version: 0.0.0-use.local
+  resolution: "@bi-tools/sqf-linter@workspace:packages/sqf-linter"
+  dependencies:
+    "@bi-tools/sqf-parser": ^1.0.0
+  languageName: unknown
+  linkType: soft
+
+"@bi-tools/sqf-parser@^1.0.0, @bi-tools/sqf-parser@workspace:packages/sqf-parser":
+  version: 0.0.0-use.local
+  resolution: "@bi-tools/sqf-parser@workspace:packages/sqf-parser"
+  dependencies:
+    "@bi-tools/preprocessor": ^1.0.0
+  languageName: unknown
+  linkType: soft
+
 "@cspotcode/source-map-support@npm:^0.8.0":
   version: 0.8.1
   resolution: "@cspotcode/source-map-support@npm:0.8.1"

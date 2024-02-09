@@ -18,7 +18,7 @@
   },
   "include": [
     "src/**/*"
-  ],
+, "packages/config-parser/src/parseConfig.ts", "packages/config-parser/src/tokenizeConfig.ts", "packages/sqf-analyzer/src/analyzeSqf.ts", "packages/enforce-script-parser/src/parseEnforceScript.ts", "packages/enforce-script-parser/src/tokenizeEnforceScript.ts"  ],
   "exclude": [
     "node_modules"
   ],

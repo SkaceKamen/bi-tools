@@ -1,0 +1,11 @@
+{
+	"name": "@bi-tools/sqf-analyzer",
+	"version": "1.0.0",
+	"description": "Analyzes SQF AST and produces useful info",
+	"author": "",
+	"license": "MIT",
+	"main": "dist/index.js",
+	"dependencies": {
+		"@bi-tools/sqf-parser": "^1.0.0"
+	}
+}

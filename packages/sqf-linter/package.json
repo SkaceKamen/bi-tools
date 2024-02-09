@@ -1,0 +1,11 @@
+{
+	"name": "@bi-tools/sqf-linter",
+	"version": "1.0.0",
+	"description": "Lints SQF scripts",
+	"author": "",
+	"license": "MIT",
+	"main": "dist/index.js",
+	"dependencies": {
+		"@bi-tools/sqf-parser": "^1.0.0"
+	}
+}

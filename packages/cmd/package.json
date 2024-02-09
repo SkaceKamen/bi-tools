@@ -1,0 +1,15 @@
+{
+	"name": "@bi-tools/cmd",
+	"version": "1.0.0",
+	"description": "",
+	"author": "",
+	"license": "MIT",
+	"main": "dist/index.js",
+	"private": true,
+	"dependencies": {
+		"@bi-tools/preprocessor": "^1.0.0",
+		"@bi-tools/sqf-analyzer": "^1.0.0",
+		"@bi-tools/sqf-linter": "^1.0.0",
+		"@bi-tools/sqf-parser": "^1.0.0"
+	}
+}

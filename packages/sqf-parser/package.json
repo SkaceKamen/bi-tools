@@ -1,0 +1,11 @@
+{
+	"name": "@bi-tools/sqf-parser",
+	"version": "1.0.0",
+	"description": "A parser for SQF (Arma scripting language)",
+	"author": "",
+	"license": "MIT",
+	"main": "dist/index.js",
+	"dependencies": {
+		"@bi-tools/preprocessor": "^1.0.0"
+	}
+}
