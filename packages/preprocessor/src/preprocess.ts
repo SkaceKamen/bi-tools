@@ -8,7 +8,8 @@ type Options = {
 	defines?: Map<string, MacroItem>
 	resolveFn?: (
 		includeParam: string,
-		sourceFilename: string
+		sourceFilename: string,
+		position: [start: number, end: number]
 	) => Promise<{ contents: string; filename: string }>
 }
 
@@ -26,7 +27,14 @@ type MacroItem = {
 	valueLocation: [from: number, to: number]
 }
 
-const COMMANDS = ['include', 'define', 'ifdef', 'ifndef', 'if'] as const
+const COMMANDS = [
+	'include',
+	'define',
+	'ifdef',
+	'ifndef',
+	'if',
+	'undef',
+] as const
 
 type Commands = (typeof COMMANDS)[number]
 
@@ -66,6 +74,8 @@ export const preprocess = async (
 		const line = code.slice(0, offset).split('\n').length
 		const lastLineIndex = code.slice(0, offset).lastIndexOf('\n')
 
+		console.log(code)
+
 		throw new PreprocessorError(
 			`Parse error at ${line}:${offset - lastLineIndex}: ${message}`
 		)
@@ -74,7 +84,7 @@ export const preprocess = async (
 	const skipWhitespace = () => {
 		while (
 			index < code.length &&
-			(code[index] === ' ' || code[index] === '\t')
+			(code[index] === ' ' || code[index] === '\t' || code[index] === '\r')
 		) {
 			index++
 		}
@@ -82,8 +92,8 @@ export const preprocess = async (
 
 	const expectWhitespace = () => {
 		const next = peek(0)
-		if (next !== ' ' && next !== '\t') {
-			raise('Expected whitespace, got ' + next)
+		if (next !== ' ' && next !== '\t' && next !== '\r') {
+			raise('Expected whitespace, got >>' + next + '<<')
 		}
 
 		while (
@@ -167,7 +177,9 @@ export const preprocess = async (
 		let name = ''
 		const firstToken = peek(0)
 		if (!firstToken.match(/[A-Z]/i)) {
-			raise('Expected macro name to start with a letter')
+			raise(
+				'Expected macro name to start with a letter, got >>' + firstToken + '<<'
+			)
 		}
 
 		name += pop()
@@ -293,13 +305,14 @@ export const preprocess = async (
 
 					skipWhitespace()
 
-					const resolved = await resolveFn(file, filename)
+					const resolved = await resolveFn(file, filename, [macroStart, index])
 					const filePath = resolved.filename
 
 					const included = await preprocess(resolved.contents, {
 						filename: filePath,
 						defines,
 						debug,
+						resolveFn,
 					})
 
 					code = code.slice(0, macroStart) + included.code + code.slice(index)
@@ -324,6 +337,29 @@ export const preprocess = async (
 						file: mappedOffsetStart.file,
 					})
 
+					index = macroStart
+
+					break
+				}
+
+				case 'undef': {
+					const mappedOffsetStart = getMappedOffsetAt(macroStart)
+
+					// TODO: This will only remove the contents, we should try to evaluate
+					expectWhitespace()
+
+					parseMacroName().name
+
+					code = code.slice(0, macroStart) + code.slice(index)
+
+					index = macroStart
+
+					sourceMap.push({
+						offset: index,
+						fileOffset: mappedOffsetStart.offset,
+						file: mappedOffsetStart.file,
+					})
+
 					break
 				}
 
@@ -334,7 +370,11 @@ export const preprocess = async (
 
 					const { name, args } = parseMacroName()
 
-					expectWhitespace()
+					skipWhitespace()
+
+					if (code[index] === '\n') {
+						continue
+					}
 
 					const mappedValueOffsetStart = getMappedOffsetAt(index)
 
@@ -365,30 +405,46 @@ export const preprocess = async (
 					break
 				}
 
-				case 'ifdef': {
-					// TODO: Implement
+				case 'ifndef':
+				case 'ifdef':
+				case 'if': {
+					const mappedOffsetStart = getMappedOffsetAt(macroStart)
 
-					while (index < code.length && code[index] !== '\n') {
+					// TODO: This will only remove the contents, we should try to evaluate
+					expectWhitespace()
+
+					parseMacroName().name
+
+					while (index < code.length) {
+						if (code.slice(index, index + '#endif'.length) === '#endif') {
+							index += '#endif'.length
+							break
+						}
+
+						if (code.slice(index, index + '#else'.length) === '#else') {
+							index += '#else'.length
+							continue
+						}
+
 						index++
 					}
 
 					code = code.slice(0, macroStart) + code.slice(index)
 
-					break
-				}
+					index = macroStart
 
-				case 'ifndef': {
-					// TODO: Implement
+					sourceMap.push({
+						offset: index,
+						fileOffset: mappedOffsetStart.offset,
+						file: mappedOffsetStart.file,
+					})
 
-					while (index < code.length && code[index] !== '\n') {
-						index++
-					}
-
-					code = code.slice(0, macroStart) + code.slice(index)
 					break
 				}
 
 				case 'if': {
+					// TODO: Implement
+
 					while (index < code.length && code[index] !== '\n') {
 						index++
 					}
