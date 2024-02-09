@@ -1,6 +1,6 @@
 import fs from 'fs'
 import path from 'path'
-import { getMappedOffsetAt as getMappedOffsetAtOriginal } from '../src/getMappedOffsetAt'
+import { getMappedOffsetAt as getMappedOffsetAtOriginal } from './getMappedOffsetAt'
 
 type Options = {
 	filename: string
@@ -197,7 +197,7 @@ export const preprocess = (
 		sourceMapOptions?: { offset: number }
 	) => {
 		const macros = Array.from(defines.entries()).sort(
-			(a, b) => a[0].length - b[0].length
+			(a, b) => b[0].length - a[0].length
 		)
 
 		let internalIndex = 0

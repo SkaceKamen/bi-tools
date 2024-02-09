@@ -105,10 +105,34 @@ export const tokenizeSqf = (input: string): SqfToken[] => {
 
 	const readNumber = () => {
 		const start = offset
-
 		offset++
 
-		// TODO: What about number with >1 dot? Those should also be invalid
+		if (input[offset] === 'x') {
+			offset++
+			while (offset < input.length && input[offset].match(/[0-9a-fA-F]/)) {
+				offset++
+			}
+
+			return input.slice(start, offset)
+		}
+
+		if (input[offset] === 'b') {
+			offset++
+			while (offset < input.length && input[offset].match(/[01]/)) {
+				offset++
+			}
+
+			return input.slice(start, offset)
+		}
+
+		if (input[offset] === 'o') {
+			offset++
+			while (offset < input.length && input[offset].match(/[0-7]/)) {
+				offset++
+			}
+
+			return input.slice(start, offset)
+		}
 
 		while (offset < input.length) {
 			if (input[offset].match(NUMBER_REST)) {
