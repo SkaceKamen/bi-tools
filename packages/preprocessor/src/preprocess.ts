@@ -110,12 +110,12 @@ export const preprocess = async (
 		}
 	}
 
-	const peek = (n: number) => {
+	const peek = (n: number, length = 1) => {
 		if (index + n >= code.length) {
 			raise('Unexpected end of file')
 		}
 
-		return code[index + n]
+		return code.slice(index + n, index + n + length)
 	}
 
 	const pop = () => {
@@ -256,17 +256,12 @@ export const preprocess = async (
 		getMappedOffsetAtOriginal(sourceMap, offset, filename)
 
 	const applyMacros = (
-		input: string,
+		ctx: { code: string; index: number },
 		sourceMapOptions?: { offset: number },
 		overrideDefines?: Map<string, MacroItem>
 	) => {
-		/*
-		const macros = [...(overrideDefines ?? defines).entries()].sort(
-			(a, b) => b[0].length - a[0].length
-		)
-		*/
-
-		let internalIndex = 0
+		let internalIndex = ctx.index
+		let input = ctx.code
 
 		while (internalIndex < input.length) {
 			// Remove any comments
@@ -351,6 +346,15 @@ export const preprocess = async (
 				break
 			}
 
+			// When applying macro inside source code, we'll stop for NL
+			if (
+				!overrideDefines &&
+				(input[internalIndex] === '\n' ||
+					input.slice(internalIndex, internalIndex + 2) === '\r\n')
+			) {
+				return { code: input, index: internalIndex }
+			}
+
 			const macroStart = internalIndex
 
 			let identifierPrefix = ''
@@ -375,11 +379,7 @@ export const preprocess = async (
 				internalIndex++
 			}
 
-			const matchingMacro = (overrideDefines ?? defines).get(
-				identifier
-			) /*macros.find(([name, { args }]) => {
-				return identifier === name + (args.length > 0 ? '(' : '')
-			})*/
+			const matchingMacro = (overrideDefines ?? defines).get(identifier)
 
 			if (matchingMacro) {
 				// Ending glue
@@ -480,7 +480,7 @@ export const preprocess = async (
 
 					// Apply arguments
 					fullyResolvedValue = applyMacros(
-						fullyResolvedValue,
+						{ code: fullyResolvedValue, index: 0 },
 						undefined,
 						new Map(
 							macro.args.map((a, i) => [
@@ -495,7 +495,7 @@ export const preprocess = async (
 								} as MacroItem,
 							])
 						)
-					)
+					).code
 				}
 
 				// For source mapping, we need the full macro call length
@@ -532,7 +532,7 @@ export const preprocess = async (
 			}
 		}
 
-		return input
+		return { code: input, index: internalIndex }
 	}
 
 	const parseConditionBodies = () => {
@@ -849,24 +849,15 @@ export const preprocess = async (
 		} else {
 			const lineStart = index
 
-			while (index < code.length) {
-				if (code.slice(index, index + 2) === '\r\n') {
-					break
-				}
+			const result = applyMacros(
+				{ code, index: lineStart },
+				{ offset: lineStart }
+			)
 
-				if (code[index] === '\n') {
-					break
-				}
+			console.log({ result })
 
-				index++
-			}
-
-			const newLine = applyMacros(code.slice(lineStart, index), {
-				offset: lineStart,
-			})
-
-			code = code.slice(0, lineStart) + newLine + code.slice(index)
-			index = lineStart + newLine.length
+			code = result.code
+			index = result.index
 		}
 	}
 

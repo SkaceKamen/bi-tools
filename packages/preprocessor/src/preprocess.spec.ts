@@ -69,3 +69,18 @@ it('processes strings in arguments', async () => {
 
 	expect(result.code).toBe('                              \n\n"test,test"')
 })
+
+it('processes marco calls with arguments on multiple lines', async () => {
+	const result = await preprocess(
+		'#define MACRO1(arg1,arg2) arg1##arg2\n\nMACRO1(\n"test,test",\nb)',
+		{
+			filename: '',
+		}
+	)
+
+	console.log(result)
+
+	expect(result.code).toBe(
+		'                                    \n\n\n"test,test"\nb'
+	)
+})
