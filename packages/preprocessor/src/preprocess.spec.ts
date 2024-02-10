@@ -28,11 +28,26 @@ it('parses nested ifs', async () => {
 	expect(result.code).toBe('')
 })
 
-/*
-TODO: Infinite loop
 it('parses nested macros', async () => {
 	const result = await preprocess(
-		'#define MACRO1(arg1,arg2) arg1\n#define MACRO2(arg1,arg2) arg2\nMACRO1(arg1,MACRO2(arg2))',
+		'#define MACRO1(arg1,arg2) arg1\n#define MACRO2(arg1,arg2) arg2\nMACRO1(a,MACRO2(b))',
+		{
+			filename: '',
+		}
+	)
+
+	console.log(result)
+
+	expect(result.code).toBe(
+		'                              \n                              \na'
+	)
+})
+
+// TODO: Argument value being the same as argument name causes infinite loop
+/*
+it('parses nested macros', async () => {
+	const result = await preprocess(
+		'#define MACRO1(arg1,arg2) arg1\n#define MACRO2(arg1,arg2) arg2\nMACRO1(arg1,MACRO2(b))',
 		{
 			filename: '',
 		}
