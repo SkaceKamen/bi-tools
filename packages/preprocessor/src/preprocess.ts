@@ -56,8 +56,10 @@ const localFsResolve = async (includeParam: string, sourceFilename: string) => {
 	}
 }
 
-const replaceSpecials = (token: string) =>
-	token.replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t')
+const replaceSpecials = (token?: string) =>
+	token
+		? token.replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t')
+		: 'EOF'
 
 export const preprocess = async (
 	code: string,
@@ -87,7 +89,7 @@ export const preprocess = async (
 	const skipWhitespace = () => {
 		while (
 			index < code.length &&
-			(code[index] === ' ' || code[index] === '\t' || code[index] === '\r')
+			(code[index] === ' ' || code[index] === '\t')
 		) {
 			index++
 		}
@@ -95,7 +97,7 @@ export const preprocess = async (
 
 	const expectWhitespace = () => {
 		const next = peek(0)
-		if (next !== ' ' && next !== '\t' && next !== '\r') {
+		if (next !== ' ' && next !== '\t') {
 			raise('Expected whitespace, got >>' + next + '<<')
 		}
 
@@ -179,9 +181,9 @@ export const preprocess = async (
 	const parseMacroName = (allowArgs = true) => {
 		let name = ''
 		const firstToken = peek(0)
-		if (!firstToken.match(/[A-Z]/i)) {
+		if (!firstToken.match(/[A-Z_]/i)) {
 			raise(
-				`Expected macro name to start with a letter, got ${replaceSpecials(
+				`Expected macro name to start with a letter or _, got ${replaceSpecials(
 					firstToken
 				)}`
 			)
@@ -254,6 +256,44 @@ export const preprocess = async (
 
 		let internalIndex = 0
 		while (internalIndex < input.length) {
+			// Remove any comments
+			// TODO: THIS IS SHIT
+			while (true) {
+				if (
+					internalIndex < input.length &&
+					input[internalIndex] === '/' &&
+					input[internalIndex + 1] === '/'
+				) {
+					while (
+						internalIndex < input.length &&
+						input[internalIndex] !== '\n'
+					) {
+						internalIndex++
+					}
+
+					continue
+				}
+
+				if (
+					internalIndex < input.length &&
+					input[internalIndex] === '/' &&
+					input[internalIndex + 1] === '*'
+				) {
+					internalIndex += 2
+					while (internalIndex < input.length) {
+						if (input.slice(internalIndex, internalIndex + 2) === '*/') {
+							internalIndex += 2
+							break
+						}
+
+						internalIndex++
+					}
+					continue
+				}
+
+				break
+			}
+
 			const macroStart = internalIndex
 
 			let identifierPrefix = ''
@@ -285,7 +325,7 @@ export const preprocess = async (
 					? getMappedOffsetAt(sourceMapOptions.offset + internalIndex)
 					: null
 
-				const [, macro] = matchingMacro
+				const [name, macro] = matchingMacro
 				const { value } = macro
 				let thisArgs = ''
 
@@ -296,20 +336,34 @@ export const preprocess = async (
 				if (macro.args.length > 0) {
 					// TODO: Should this cause an error?
 					if (input[internalIndex] !== '(') {
-						raise(`Expected (, got ${replaceSpecials(input[index])}`)
+						console.log('INPUT', input)
+
+						raise(
+							`While expanding ${name}, expected (, got ${replaceSpecials(
+								input[index]
+							)}`
+						)
 					}
 
 					internalIndex++
 
+					// TODO: THIS DOESN'T WORK, WILL NEVER WORK, THE WHOLE PREPROCESSOR HAS TO BE REWRITTEN TO SUPPORT MACROS WITH ARGUMENTS INSIDE MACROS WITH ARGUMENTS
+					const expandedInput = applyMacros(input.slice(internalIndex))
+					let expandedIndex = 0
+
 					// Collect arguments
-					while (internalIndex < input.length) {
-						if (input[internalIndex] === ')') {
+					while (expandedIndex < expandedInput.length) {
+						if (expandedInput[expandedIndex] === ')') {
 							break
 						}
 
-						thisArgs += input[internalIndex]
-						internalIndex++
+						thisArgs += expandedInput[expandedIndex]
+						expandedIndex++
 					}
+
+					expandedIndex++
+
+					internalIndex += expandedIndex
 
 					internalIndex++
 
@@ -335,24 +389,6 @@ export const preprocess = async (
 					)
 				}
 
-				// Continue applying macros until no more changes
-				// TODO: Is this the best way? We could maybe go back to the previous index?
-				let iterations = 0
-
-				while (true) {
-					const newFullyResolvedValue = applyMacros(fullyResolvedValue)
-					if (newFullyResolvedValue === fullyResolvedValue) {
-						break
-					}
-
-					if (iterations++ >= 1000) {
-						console.log(input)
-						throw new Error(`Too many macro iterations`)
-					}
-
-					fullyResolvedValue = newFullyResolvedValue
-				}
-
 				// For source mapping, we need the full macro call length
 				/*const fullMacroCall =
 					name + (thisArgs.length > 0 ? '(' + thisArgs + ')' : '')*/
@@ -361,8 +397,6 @@ export const preprocess = async (
 					input.slice(0, macroStart) +
 					fullyResolvedValue +
 					input.slice(internalIndex)
-
-				internalIndex += fullyResolvedValue.length
 
 				if (sourceMapOptions && mappedOffset) {
 					sourceMap.push({
@@ -380,6 +414,8 @@ export const preprocess = async (
 						file: mappedOffset.file,
 					})
 				}
+
+				internalIndex = macroStart
 			} else {
 				if (identifier.length === 0) {
 					internalIndex++
@@ -420,8 +456,34 @@ export const preprocess = async (
 		return { positive, negative }
 	}
 
+	const skipComments = () => {
+		if (index < code.length && peek(0) === '/' && peek(1) === '/') {
+			while (index < code.length && code[index] !== '\n') {
+				index++
+			}
+		}
+
+		if (index < code.length && peek(0) === '/' && peek(1) === '*') {
+			index += 2
+			while (index < code.length) {
+				if (code.slice(index, index + 2) === '*/') {
+					index += 2
+					break
+				}
+
+				index++
+			}
+		}
+	}
+
 	while (index < code.length) {
 		skipNewLines()
+		skipComments()
+		skipWhitespace()
+
+		if (index >= code.length) {
+			break
+		}
 
 		const macroStart = index
 		const current = code[index]
