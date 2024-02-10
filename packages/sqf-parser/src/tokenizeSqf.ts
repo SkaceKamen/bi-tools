@@ -180,9 +180,11 @@ export const tokenizeSqf = (input: string): SqfToken[] => {
 
 	const readMultiLineComment = () => {
 		const start = offset
+		offset += 2
+
 		while (
 			offset < input.length - 1 &&
-			!(input[offset] === '*' && input[offset + 1] === '/')
+			input.slice(offset, offset + 2) !== '*/'
 		) {
 			offset++
 		}
