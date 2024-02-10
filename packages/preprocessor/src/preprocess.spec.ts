@@ -56,3 +56,16 @@ it('parses nested macros', async () => {
 	expect(result.code).toBe('arg1')
 })
 */
+
+it('processes strings in arguments', async () => {
+	const result = await preprocess(
+		'#define MACRO1(arg1,arg2) arg1\n\nMACRO1("test,test",b)',
+		{
+			filename: '',
+		}
+	)
+
+	console.log(result)
+
+	expect(result.code).toBe('                              \n\n"test,test"')
+})

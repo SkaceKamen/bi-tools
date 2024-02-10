@@ -255,6 +255,7 @@ export const preprocess = async (
 		)
 
 		let internalIndex = 0
+
 		while (internalIndex < input.length) {
 			// Remove any comments
 			// TODO: THIS IS SHIT
@@ -409,6 +410,32 @@ export const preprocess = async (
 							if (depth === 0) {
 								break
 							}
+						}
+
+						// TODO: Escaping
+						if (input[internalIndex] === '"') {
+							argAcc += input[internalIndex]
+							internalIndex++
+							while (input[internalIndex] !== '"') {
+								argAcc += input[internalIndex]
+								internalIndex++
+							}
+							argAcc += input[internalIndex]
+							internalIndex++
+							continue
+						}
+
+						// TODO: Escaping
+						if (input[internalIndex] === "'") {
+							argAcc += input[internalIndex]
+							internalIndex++
+							while (input[internalIndex] !== "'") {
+								argAcc += input[internalIndex]
+								internalIndex++
+							}
+							argAcc += input[internalIndex]
+							internalIndex++
+							continue
 						}
 
 						if (input[internalIndex] === ',' && depth === 1) {
