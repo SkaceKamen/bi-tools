@@ -663,16 +663,18 @@ export const preprocess = async (
 
 					skipWhitespace()
 
+					let value = ''
+
 					if (
 						code[index] === '\n' ||
 						(code[index] === '\r' && code[index + 1] === '\n')
 					) {
-						continue
+						value = ''
+					} else {
+						value = parseMacroValue()
 					}
 
 					const mappedValueOffsetStart = getMappedOffsetAt(index)
-
-					const value = parseMacroValue()
 
 					const mappedOffsetEnd = getMappedOffsetAt(index)
 
@@ -689,13 +691,19 @@ export const preprocess = async (
 						],
 					})
 
-					code = code.slice(0, macroStart) + code.slice(index)
+					code =
+						code.slice(0, macroStart) +
+						' '.repeat(index - macroStart) +
+						code.slice(index)
 
+					/*
+					// TODO: We could replace the above ' ' repeating with proper source map?
 					sourceMap.push({
-						offset: macroStart,
-						fileOffset: mappedOffsetStart.offset,
-						file: mappedOffsetStart.file,
+						offset: index,
+						fileOffset: mappedOffsetEnd.offset,
+						file: mappedOffsetEnd.file,
 					})
+					*/
 
 					index = macroStart
 
@@ -710,8 +718,12 @@ export const preprocess = async (
 
 					const condition = parseMacroName(false).name
 					const { positive, negative } = parseConditionBodies()
+					const isDefined = defines.has(condition)
+					const isPositive =
+						(command === 'ifdef' && isDefined) ||
+						(command === 'ifndef' && !isDefined)
 
-					if (defines.has(condition)) {
+					if (isPositive) {
 						code = code.slice(0, macroStart) + positive + code.slice(index)
 					} else {
 						code = code.slice(0, macroStart) + negative + code.slice(index)
