@@ -2,11 +2,11 @@
   "name": "bi-tools",
   "version": "1.0.0",
   "description": "",
-	"private": true,
+  "private": true,
   "scripts": {
     "test": "vitest",
-		"build": "tsc -b",
-		"watch": "tsc -b -w"
+    "build": "tsc -b",
+    "watch": "tsc -b -w"
   },
   "devDependencies": {
     "@types/node": "^20.1.7",

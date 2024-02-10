@@ -3,6 +3,7 @@ import { preprocess } from '@bi-tools/preprocessor'
 import { parseSqfTokens, tokenizeSqf } from '@bi-tools/sqf-parser'
 import { lintSqf } from '@bi-tools/sqf-linter'
 import { analyzeSqf } from '@bi-tools/sqf-analyzer'
+import path from 'path'
 
 async function main() {
 	const file = await fs.promises.readFile(process.argv[2])
@@ -10,6 +11,20 @@ async function main() {
 
 	const preprocessed = await preprocess(contents, {
 		filename: process.argv[2],
+		async resolveFn(includeParam, sourceFilename) {
+			try {
+				return {
+					contents: await fs.promises.readFile(
+						path.join(path.dirname(sourceFilename), includeParam),
+						'utf-8'
+					),
+					filename: path.join(path.dirname(sourceFilename), includeParam),
+				}
+			} catch (err) {
+				console.error('failed to load included file', err)
+				return { contents: '', filename: '' }
+			}
+		},
 	})
 
 	await fs.promises.writeFile('processed.sqf', preprocessed.code)

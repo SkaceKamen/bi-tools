@@ -56,6 +56,9 @@ const localFsResolve = async (includeParam: string, sourceFilename: string) => {
 	}
 }
 
+const replaceSpecials = (token: string) =>
+	token.replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t')
+
 export const preprocess = async (
 	code: string,
 	{
@@ -173,12 +176,14 @@ export const preprocess = async (
 		return raise('Expected " or <')
 	}
 
-	const parseMacroName = () => {
+	const parseMacroName = (allowArgs = true) => {
 		let name = ''
 		const firstToken = peek(0)
 		if (!firstToken.match(/[A-Z]/i)) {
 			raise(
-				'Expected macro name to start with a letter, got >>' + firstToken + '<<'
+				`Expected macro name to start with a letter, got ${replaceSpecials(
+					firstToken
+				)}`
 			)
 		}
 
@@ -188,7 +193,7 @@ export const preprocess = async (
 			name += pop()
 		}
 
-		if (peek(0) === '(') {
+		if (allowArgs && peek(0) === '(') {
 			pop()
 			let args = ''
 			while (peek(0) !== ')') {
@@ -208,10 +213,25 @@ export const preprocess = async (
 
 	const parseMacroValue = () => {
 		let value = ''
-		while (index < code.length && peek(0) !== '\n') {
-			if (peek(0) === '\\' && peek(1) === '\n') {
-				index += 2
-				continue
+		while (index < code.length) {
+			if (peek(0) === '\r' && peek(1) === '\n') {
+				break
+			}
+
+			if (peek(0) === '\n') {
+				break
+			}
+
+			if (peek(0) === '\\') {
+				if (peek(1) === '\r' && peek(2) === '\n') {
+					index += 3
+					continue
+				}
+
+				if (peek(1) === '\n') {
+					index += 2
+					continue
+				}
 			}
 
 			value += pop()
@@ -225,46 +245,128 @@ export const preprocess = async (
 
 	const applyMacros = (
 		input: string,
-		sourceMapOptions?: { offset: number }
+		sourceMapOptions?: { offset: number },
+		overrideDefines?: Map<string, MacroItem>
 	) => {
-		const macros = Array.from(defines.entries()).sort(
+		const macros = [...(overrideDefines ?? defines).entries()].sort(
 			(a, b) => b[0].length - a[0].length
 		)
 
 		let internalIndex = 0
 		while (internalIndex < input.length) {
+			const macroStart = internalIndex
+
+			let identifierPrefix = ''
+			if (input.slice(internalIndex, internalIndex + 2) === '##') {
+				identifierPrefix += '##'
+				internalIndex += 2
+			} else if (input[internalIndex] === '#') {
+				identifierPrefix += '#'
+				internalIndex++
+			}
+
+			let identifier = ''
+			while (internalIndex < input.length && /\w/.test(input[internalIndex])) {
+				identifier += input[internalIndex]
+				internalIndex++
+			}
+
 			const matchingMacro = macros.find(([name]) => {
-				return input.slice(internalIndex, internalIndex + name.length) === name
+				return identifier === name
 			})
 
 			if (matchingMacro) {
+				// Ending glue
+				if (input.slice(internalIndex, internalIndex + 2) === '##') {
+					internalIndex += 2
+				}
+
 				const mappedOffset = sourceMapOptions
 					? getMappedOffsetAt(sourceMapOptions.offset + internalIndex)
 					: null
 
-				const [name, macro] = matchingMacro
+				const [, macro] = matchingMacro
 				const { value } = macro
+				let thisArgs = ''
 
-				// TODO: Is this good idea?
-				let fullyResolvedValue = value
+				let fullyResolvedValue =
+					identifierPrefix === '#' ? '"' + value + '"' : value
+
+				// Parse arguments if needed
+				if (macro.args.length > 0) {
+					// TODO: Should this cause an error?
+					if (input[internalIndex] !== '(') {
+						raise(`Expected (, got ${replaceSpecials(input[index])}`)
+					}
+
+					internalIndex++
+
+					// Collect arguments
+					while (internalIndex < input.length) {
+						if (input[internalIndex] === ')') {
+							break
+						}
+
+						thisArgs += input[internalIndex]
+						internalIndex++
+					}
+
+					internalIndex++
+
+					const inputArgs = thisArgs.split(',').map((a) => a.trim())
+
+					// Apply arguments
+					fullyResolvedValue = applyMacros(
+						fullyResolvedValue,
+						undefined,
+						new Map(
+							macro.args.map((a, i) => [
+								a,
+								{
+									name: a,
+									args: [],
+									file: macro.file,
+									location: [0, 0],
+									valueLocation: [0, 0],
+									value: inputArgs[i],
+								} as MacroItem,
+							])
+						)
+					)
+				}
+
+				// Continue applying macros until no more changes
+				// TODO: Is this the best way? We could maybe go back to the previous index?
+				let iterations = 0
+
 				while (true) {
 					const newFullyResolvedValue = applyMacros(fullyResolvedValue)
 					if (newFullyResolvedValue === fullyResolvedValue) {
 						break
 					}
 
+					if (iterations++ >= 1000) {
+						console.log(input)
+						throw new Error(`Too many macro iterations`)
+					}
+
 					fullyResolvedValue = newFullyResolvedValue
 				}
 
-				// TODO: Apply args!
+				// For source mapping, we need the full macro call length
+				/*const fullMacroCall =
+					name + (thisArgs.length > 0 ? '(' + thisArgs + ')' : '')*/
+
 				input =
-					input.slice(0, internalIndex) +
+					input.slice(0, macroStart) +
 					fullyResolvedValue +
-					input.slice(internalIndex + name.length)
+					input.slice(internalIndex)
+
+				internalIndex += fullyResolvedValue.length
 
 				if (sourceMapOptions && mappedOffset) {
 					sourceMap.push({
-						offset: sourceMapOptions.offset + internalIndex,
+						offset: sourceMapOptions.offset + macroStart,
 						fileOffset: macro.valueLocation[0],
 						file: macro.file,
 					})
@@ -274,17 +376,48 @@ export const preprocess = async (
 							sourceMapOptions.offset +
 							internalIndex +
 							fullyResolvedValue.length,
-						// TODO: This will have to also include the args
-						fileOffset: mappedOffset.offset + name.length,
+						fileOffset: mappedOffset.offset + (internalIndex - macroStart),
 						file: mappedOffset.file,
 					})
 				}
 			} else {
-				internalIndex++
+				if (identifier.length === 0) {
+					internalIndex++
+				}
 			}
 		}
 
 		return input
+	}
+
+	const parseConditionBodies = () => {
+		let positive = ''
+		let negative = ''
+
+		let isInPositive = true
+
+		while (index < code.length) {
+			if (code.slice(index, index + '#endif'.length) === '#endif') {
+				index += '#endif'.length
+				break
+			}
+
+			if (code.slice(index, index + '#else'.length) === '#else') {
+				index += '#else'.length
+				isInPositive = false
+				continue
+			}
+
+			if (isInPositive) {
+				positive += code[index]
+			} else {
+				negative += code[index]
+			}
+
+			index++
+		}
+
+		return { positive, negative }
 	}
 
 	while (index < code.length) {
@@ -348,7 +481,8 @@ export const preprocess = async (
 					// TODO: This will only remove the contents, we should try to evaluate
 					expectWhitespace()
 
-					parseMacroName().name
+					const name = parseMacroName(false).name
+					defines.delete(name)
 
 					code = code.slice(0, macroStart) + code.slice(index)
 
@@ -406,30 +540,19 @@ export const preprocess = async (
 				}
 
 				case 'ifndef':
-				case 'ifdef':
-				case 'if': {
+				case 'ifdef': {
 					const mappedOffsetStart = getMappedOffsetAt(macroStart)
 
-					// TODO: This will only remove the contents, we should try to evaluate
 					expectWhitespace()
 
-					parseMacroName().name
+					const condition = parseMacroName(false).name
+					const { positive, negative } = parseConditionBodies()
 
-					while (index < code.length) {
-						if (code.slice(index, index + '#endif'.length) === '#endif') {
-							index += '#endif'.length
-							break
-						}
-
-						if (code.slice(index, index + '#else'.length) === '#else') {
-							index += '#else'.length
-							continue
-						}
-
-						index++
+					if (defines.has(condition)) {
+						code = code.slice(0, macroStart) + positive + code.slice(index)
+					} else {
+						code = code.slice(0, macroStart) + negative + code.slice(index)
 					}
-
-					code = code.slice(0, macroStart) + code.slice(index)
 
 					index = macroStart
 
@@ -443,13 +566,35 @@ export const preprocess = async (
 				}
 
 				case 'if': {
-					// TODO: Implement
+					const mappedOffsetStart = getMappedOffsetAt(macroStart)
 
-					while (index < code.length && code[index] !== '\n') {
+					expectWhitespace()
+
+					let condition = ''
+					while (index < code.length) {
+						if (code[index] === '\n') {
+							break
+						}
+
+						condition += code[index]
 						index++
 					}
 
-					code = code.slice(0, macroStart) + code.slice(index)
+					// TODO: Actually evaluate condition
+					condition
+
+					const { positive } = parseConditionBodies()
+
+					code = code.slice(0, macroStart) + positive + code.slice(index)
+
+					index = macroStart
+
+					sourceMap.push({
+						offset: index,
+						fileOffset: mappedOffsetStart.offset,
+						file: mappedOffsetStart.file,
+					})
+
 					break
 				}
 
@@ -459,14 +604,24 @@ export const preprocess = async (
 		} else {
 			const lineStart = index
 
-			while (index < code.length && code[index] !== '\n') {
+			while (index < code.length) {
+				if (code.slice(index, index + 2) === '\r\n') {
+					break
+				}
+
+				if (code[index] === '\n') {
+					break
+				}
+
 				index++
 			}
 
-			code =
-				code.slice(0, lineStart) +
-				applyMacros(code.slice(lineStart, index), { offset: lineStart }) +
-				code.slice(index)
+			const newLine = applyMacros(code.slice(lineStart, index), {
+				offset: lineStart,
+			})
+
+			code = code.slice(0, lineStart) + newLine + code.slice(index)
+			index = lineStart + newLine.length
 		}
 	}
 
