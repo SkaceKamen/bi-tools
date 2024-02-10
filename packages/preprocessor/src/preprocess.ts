@@ -254,8 +254,6 @@ export const preprocess = async (
 			(a, b) => b[0].length - a[0].length
 		)
 
-		//overrideDefines && console.log('Expanding', macros)
-
 		let internalIndex = 0
 		while (internalIndex < input.length) {
 			// Remove any comments
@@ -343,12 +341,14 @@ export const preprocess = async (
 			const macroStart = internalIndex
 
 			let identifierPrefix = ''
-			if (input.slice(internalIndex, internalIndex + 2) === '##') {
-				identifierPrefix += '##'
-				internalIndex += 2
-			} else if (input[internalIndex] === '#') {
-				identifierPrefix += '#'
-				internalIndex++
+			if (overrideDefines) {
+				if (input.slice(internalIndex, internalIndex + 2) === '##') {
+					identifierPrefix += '##'
+					internalIndex += 2
+				} else if (input[internalIndex] === '#') {
+					identifierPrefix += '#'
+					internalIndex++
+				}
 			}
 
 			let identifier = ''
@@ -357,17 +357,16 @@ export const preprocess = async (
 				internalIndex++
 			}
 
-			//overrideDefines && console.log(input)
-			/*overrideDefines &&
-				console.log('at', macroStart, 'Found', { identifier, identifierPrefix })*/
-
 			const matchingMacro = macros.find(([name]) => {
 				return identifier === name
 			})
 
 			if (matchingMacro) {
 				// Ending glue
-				if (input.slice(internalIndex, internalIndex + 2) === '##') {
+				if (
+					overrideDefines &&
+					input.slice(internalIndex, internalIndex + 2) === '##'
+				) {
 					internalIndex += 2
 				}
 
@@ -656,7 +655,7 @@ export const preprocess = async (
 				}
 
 				case 'define': {
-					const mappedOffsetStart = getMappedOffsetAt(index)
+					const mappedOffsetStart = getMappedOffsetAt(macroStart)
 
 					expectWhitespace()
 
@@ -664,13 +663,15 @@ export const preprocess = async (
 
 					skipWhitespace()
 
-					if (code[index] === '\n') {
+					if (
+						code[index] === '\n' ||
+						(code[index] === '\r' && code[index + 1] === '\n')
+					) {
 						continue
 					}
 
 					const mappedValueOffsetStart = getMappedOffsetAt(index)
 
-					// TODO: Should we apply the macros here?
 					const value = parseMacroValue()
 
 					const mappedOffsetEnd = getMappedOffsetAt(index)
@@ -688,11 +689,15 @@ export const preprocess = async (
 						],
 					})
 
-					// TODO: This doesn't require mapping, but will break when there a escaped newline in the macro
-					code =
-						code.slice(0, macroStart) +
-						' '.repeat(index - macroStart) +
-						code.slice(index)
+					code = code.slice(0, macroStart) + code.slice(index)
+
+					sourceMap.push({
+						offset: macroStart,
+						fileOffset: mappedOffsetStart.offset,
+						file: mappedOffsetStart.file,
+					})
+
+					index = macroStart
 
 					break
 				}
