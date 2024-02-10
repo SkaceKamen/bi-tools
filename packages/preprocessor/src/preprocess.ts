@@ -254,6 +254,8 @@ export const preprocess = async (
 			(a, b) => b[0].length - a[0].length
 		)
 
+		//overrideDefines && console.log('Expanding', macros)
+
 		let internalIndex = 0
 		while (internalIndex < input.length) {
 			// Remove any comments
@@ -294,6 +296,50 @@ export const preprocess = async (
 				break
 			}
 
+			// Skip strings
+			// TODO: THIS IS SHIT
+			while (true) {
+				if (internalIndex < input.length && input[internalIndex] === '"') {
+					internalIndex++
+					while (internalIndex < input.length) {
+						if (input.slice(internalIndex, internalIndex + 2) === '""') {
+							internalIndex += 2
+							continue
+						}
+
+						if (input[internalIndex] === '"') {
+							internalIndex++
+							break
+						}
+
+						internalIndex++
+					}
+
+					continue
+				}
+
+				if (internalIndex < input.length && input[internalIndex] === "'") {
+					internalIndex++
+					while (internalIndex < input.length) {
+						if (input.slice(internalIndex, internalIndex + 2) === "''") {
+							internalIndex += 2
+							continue
+						}
+
+						if (input[internalIndex] === "'") {
+							internalIndex++
+							break
+						}
+
+						internalIndex++
+					}
+
+					continue
+				}
+
+				break
+			}
+
 			const macroStart = internalIndex
 
 			let identifierPrefix = ''
@@ -311,6 +357,10 @@ export const preprocess = async (
 				internalIndex++
 			}
 
+			//overrideDefines && console.log(input)
+			/*overrideDefines &&
+				console.log('at', macroStart, 'Found', { identifier, identifierPrefix })*/
+
 			const matchingMacro = macros.find(([name]) => {
 				return identifier === name
 			})
@@ -327,7 +377,6 @@ export const preprocess = async (
 
 				const [name, macro] = matchingMacro
 				const { value } = macro
-				let thisArgs = ''
 
 				let fullyResolvedValue =
 					identifierPrefix === '#' ? '"' + value + '"' : value
@@ -336,8 +385,6 @@ export const preprocess = async (
 				if (macro.args.length > 0) {
 					// TODO: Should this cause an error?
 					if (input[internalIndex] !== '(') {
-						console.log('INPUT', input)
-
 						raise(
 							`While expanding ${name}, expected (, got ${replaceSpecials(
 								input[index]
@@ -347,27 +394,51 @@ export const preprocess = async (
 
 					internalIndex++
 
-					// TODO: THIS DOESN'T WORK, WILL NEVER WORK, THE WHOLE PREPROCESSOR HAS TO BE REWRITTEN TO SUPPORT MACROS WITH ARGUMENTS INSIDE MACROS WITH ARGUMENTS
-					const expandedInput = applyMacros(input.slice(internalIndex))
-					let expandedIndex = 0
+					const inputArgs = [] as string[]
+					let argAcc = ''
+					let depth = 1
 
 					// Collect arguments
-					while (expandedIndex < expandedInput.length) {
-						if (expandedInput[expandedIndex] === ')') {
-							break
+					while (internalIndex < input.length) {
+						if (input[internalIndex] === '(') {
+							depth++
 						}
 
-						thisArgs += expandedInput[expandedIndex]
-						expandedIndex++
+						if (input[internalIndex] === ')') {
+							depth--
+
+							if (depth === 0) {
+								break
+							}
+						}
+
+						if (input[internalIndex] === ',' && depth === 1) {
+							inputArgs.push(argAcc)
+							argAcc = ''
+							internalIndex++
+							continue
+						}
+
+						argAcc += input[internalIndex]
+						internalIndex++
 					}
 
-					expandedIndex++
-
-					internalIndex += expandedIndex
+					inputArgs.push(argAcc)
 
 					internalIndex++
 
-					const inputArgs = thisArgs.split(',').map((a) => a.trim())
+					if (inputArgs.length !== macro.args.length) {
+						console.log(inputArgs)
+
+						raise(
+							'Invalid number of arguments for ' +
+								name +
+								'. Expected ' +
+								macro.args.length +
+								' got ' +
+								inputArgs.length
+						)
+					}
 
 					// Apply arguments
 					fullyResolvedValue = applyMacros(
@@ -432,10 +503,35 @@ export const preprocess = async (
 
 		let isInPositive = true
 
+		let depth = 1
+
 		while (index < code.length) {
+			// TODO: THIS IS SHIT! But kind of works, so whatever
+			if (code.slice(index, index + '#ifdef'.length) === '#ifdef') {
+				depth++
+				index += '#ifdef'.length
+				continue
+			}
+
+			if (code.slice(index, index + '#ifndef'.length) === '#ifndef') {
+				depth++
+				index += '#ifdef'.length
+				continue
+			}
+
+			if (code.slice(index, index + '#if'.length) === '#if') {
+				depth++
+				index += '#ifdef'.length
+				continue
+			}
+
 			if (code.slice(index, index + '#endif'.length) === '#endif') {
+				depth--
 				index += '#endif'.length
-				break
+
+				if (depth === 0) {
+					break
+				}
 			}
 
 			if (code.slice(index, index + '#else'.length) === '#else') {
