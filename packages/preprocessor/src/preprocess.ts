@@ -20,6 +20,7 @@ export type SourceMapItem = {
 }
 
 type MacroItem = {
+	name: string
 	args: string[]
 	value: string
 	file: string
@@ -236,6 +237,15 @@ export const preprocess = async (
 				}
 			}
 
+			// Stop on comments, those shouldn't be part of the value
+			if (
+				(peek(0) === '/' && peek(1) === '/') ||
+				// TODO: /* could be an issue tbh
+				(peek(0) === '/' && peek(1) === '*')
+			) {
+				break
+			}
+
 			value += pop()
 		}
 
@@ -250,9 +260,11 @@ export const preprocess = async (
 		sourceMapOptions?: { offset: number },
 		overrideDefines?: Map<string, MacroItem>
 	) => {
+		/*
 		const macros = [...(overrideDefines ?? defines).entries()].sort(
 			(a, b) => b[0].length - a[0].length
 		)
+		*/
 
 		let internalIndex = 0
 
@@ -358,9 +370,16 @@ export const preprocess = async (
 				internalIndex++
 			}
 
-			const matchingMacro = macros.find(([name]) => {
-				return identifier === name
-			})
+			if (input[internalIndex] === '(') {
+				identifier += '('
+				internalIndex++
+			}
+
+			const matchingMacro = (overrideDefines ?? defines).get(
+				identifier
+			) /*macros.find(([name, { args }]) => {
+				return identifier === name + (args.length > 0 ? '(' : '')
+			})*/
 
 			if (matchingMacro) {
 				// Ending glue
@@ -375,7 +394,7 @@ export const preprocess = async (
 					? getMappedOffsetAt(sourceMapOptions.offset + internalIndex)
 					: null
 
-				const [name, macro] = matchingMacro
+				const macro = matchingMacro
 				const { value } = macro
 
 				let fullyResolvedValue =
@@ -383,17 +402,6 @@ export const preprocess = async (
 
 				// Parse arguments if needed
 				if (macro.args.length > 0) {
-					// TODO: Should this cause an error?
-					if (input[internalIndex] !== '(') {
-						raise(
-							`While expanding ${name}, expected (, got ${replaceSpecials(
-								input[index]
-							)}`
-						)
-					}
-
-					internalIndex++
-
 					const inputArgs = [] as string[]
 					let argAcc = ''
 					let depth = 1
@@ -459,11 +467,14 @@ export const preprocess = async (
 
 						raise(
 							'Invalid number of arguments for ' +
-								name +
+								macro.name +
 								'. Expected ' +
 								macro.args.length +
 								' got ' +
-								inputArgs.length
+								inputArgs.length +
+								' (' +
+								inputArgs.join(', ') +
+								')'
 						)
 					}
 
@@ -735,7 +746,8 @@ export const preprocess = async (
 
 					debug && console.log('define', { name, args, value })
 
-					defines.set(name, {
+					defines.set(name + (args.length > 0 ? '(' : ''), {
+						name,
 						args,
 						value,
 						file: mappedOffsetStart.file,
