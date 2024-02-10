@@ -46,6 +46,7 @@ const KEYWORDS = [
 	'#',
 	'/',
 	':',
+	'^',
 ]
 
 const NUMBER_START = /[0-9]/
@@ -137,7 +138,7 @@ export const tokenizeSqf = (input: string): SqfToken[] => {
 		while (offset < input.length) {
 			if (input[offset].match(NUMBER_REST)) {
 				offset++
-			} else if (input[offset] === 'e') {
+			} else if (input[offset].toLowerCase() === 'e') {
 				offset++
 
 				if (input[offset] === '-' || input[offset] === '+') {

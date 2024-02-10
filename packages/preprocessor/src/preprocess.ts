@@ -399,6 +399,7 @@ export const preprocess = async (
 					let depth = 1
 
 					// Collect arguments
+					// TODO: Multiline arguments are supported :(
 					while (internalIndex < input.length) {
 						if (input[internalIndex] === '(') {
 							depth++
@@ -536,18 +537,39 @@ export const preprocess = async (
 			if (code.slice(index, index + '#ifdef'.length) === '#ifdef') {
 				depth++
 				index += '#ifdef'.length
+
+				if (isInPositive) {
+					positive += '#ifdef'
+				} else {
+					negative += '#ifdef'
+				}
+
 				continue
 			}
 
 			if (code.slice(index, index + '#ifndef'.length) === '#ifndef') {
 				depth++
-				index += '#ifdef'.length
+				index += '#ifndef'.length
+
+				if (isInPositive) {
+					positive += '#ifndef'
+				} else {
+					negative += '#ifndef'
+				}
+
 				continue
 			}
 
 			if (code.slice(index, index + '#if'.length) === '#if') {
 				depth++
-				index += '#ifdef'.length
+				index += '#if'.length
+
+				if (isInPositive) {
+					positive += '#if'
+				} else {
+					negative += '#if'
+				}
+
 				continue
 			}
 
@@ -557,6 +579,12 @@ export const preprocess = async (
 
 				if (depth === 0) {
 					break
+				} else {
+					if (isInPositive) {
+						positive += '#endif'
+					} else {
+						negative += '#endif'
+					}
 				}
 			}
 
@@ -750,8 +778,11 @@ export const preprocess = async (
 						(command === 'ifdef' && isDefined) ||
 						(command === 'ifndef' && !isDefined)
 
+					// console.log({ command, condition, isDefined, isPositive })
+
 					if (isPositive) {
 						code = code.slice(0, macroStart) + positive + code.slice(index)
+						// console.log('put', positive.length, 'as positive')
 					} else {
 						code = code.slice(0, macroStart) + negative + code.slice(index)
 					}
