@@ -25,12 +25,12 @@ it('parses nested ifs', async () => {
 		filename: '',
 	})
 
-	expect(result.code).toBe('')
+	expect(result.code).toBe('                                      ')
 })
 
 it('parses nested macros', async () => {
 	const result = await preprocess(
-		'#define MACRO1(arg1,arg2) arg1\n#define MACRO2(arg1,arg2) arg2\nMACRO1(a,MACRO2(b))',
+		'#define MACRO1(arg1,arg2) arg1\n#define MACRO2(arg1,arg2) arg2\nMACRO1(a,MACRO2(b,c))',
 		{
 			filename: '',
 		}
@@ -65,8 +65,6 @@ it('processes strings in arguments', async () => {
 		}
 	)
 
-	console.log(result)
-
 	expect(result.code).toBe('                              \n\n"test,test"')
 })
 
@@ -78,9 +76,46 @@ it('processes marco calls with arguments on multiple lines', async () => {
 		}
 	)
 
-	console.log(result)
-
 	expect(result.code).toBe(
 		'                                    \n\n\n"test,test"\nb'
+	)
+})
+
+it('glues together nested macro values from left', async () => {
+	const result = await preprocess(
+		'#define MACRO1(arg1,arg2) arg1##_##arg2\n#define TEST tst\nMACRO1(TEST,arg)',
+		{
+			filename: '',
+		}
+	)
+
+	expect(result.code).toBe(
+		'                                       \n                \ntst_arg'
+	)
+})
+
+it('glues together nested macro values from right', async () => {
+	const result = await preprocess(
+		'#define MACRO1(arg1,arg2) arg1##_##arg2\n#define TEST tst\nMACRO1(arg,TEST)',
+		{
+			filename: '',
+		}
+	)
+
+	expect(result.code).toBe(
+		'                                       \n                \narg_tst'
+	)
+})
+
+it('glues together nested macro values from both sides', async () => {
+	const result = await preprocess(
+		'#define MACRO1(arg1,arg2) arg1##_##arg2\n#define TEST tst\nMACRO1(TEST,TEST)',
+		{
+			filename: '',
+		}
+	)
+
+	expect(result.code).toBe(
+		'                                       \n                \ntst_tst'
 	)
 })

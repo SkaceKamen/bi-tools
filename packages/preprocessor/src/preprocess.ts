@@ -382,11 +382,14 @@ export const preprocess = async (
 			const matchingMacro = (overrideDefines ?? defines).get(identifier)
 
 			if (matchingMacro) {
+				let identifierPostfix = ''
+
 				// Ending glue
 				if (
 					overrideDefines &&
 					input.slice(internalIndex, internalIndex + 2) === '##'
 				) {
+					identifierPostfix = '##'
 					internalIndex += 2
 				}
 
@@ -400,6 +403,14 @@ export const preprocess = async (
 				let fullyResolvedValue =
 					identifierPrefix === '#' ? '"' + value + '"' : value
 
+				// Glueing together stuff can be tricky, let's resolve what we're resolving first
+				if (identifierPrefix === '##' || identifierPostfix === '##') {
+					fullyResolvedValue = applyMacros({
+						code: fullyResolvedValue,
+						index: 0,
+					}).code
+				}
+
 				// Parse arguments if needed
 				if (macro.args.length > 0) {
 					const inputArgs = [] as string[]
@@ -407,7 +418,6 @@ export const preprocess = async (
 					let depth = 1
 
 					// Collect arguments
-					// TODO: Multiline arguments are supported :(
 					while (internalIndex < input.length) {
 						if (input[internalIndex] === '(') {
 							depth++
@@ -478,12 +488,9 @@ export const preprocess = async (
 						)
 					}
 
-					// Apply arguments
-					fullyResolvedValue = applyMacros(
-						{ code: fullyResolvedValue, index: 0 },
-						undefined,
-						new Map(
-							macro.args.map((a, i) => [
+					const expandedInputArgs = macro.args.map(
+						(a, i) =>
+							[
 								a,
 								{
 									name: a,
@@ -491,11 +498,22 @@ export const preprocess = async (
 									file: macro.file,
 									location: [0, 0],
 									valueLocation: [0, 0],
-									value: inputArgs[i],
+									identifierPostfix,
+									value: inputArgs[i], // applyMacros({ code: inputArgs[i], index: 0 }).code,
 								} as MacroItem,
-							])
-						)
+							] as const
+					)
+
+					console.log('expand', macro.name, 'with', expandedInputArgs)
+
+					// Apply arguments
+					fullyResolvedValue = applyMacros(
+						{ code: fullyResolvedValue, index: 0 },
+						undefined,
+						new Map(expandedInputArgs)
 					).code
+
+					console.log('Expanded into', fullyResolvedValue)
 				}
 
 				// For source mapping, we need the full macro call length
@@ -792,12 +810,13 @@ export const preprocess = async (
 
 					// console.log({ command, condition, isDefined, isPositive })
 
-					if (isPositive) {
-						code = code.slice(0, macroStart) + positive + code.slice(index)
-						// console.log('put', positive.length, 'as positive')
-					} else {
-						code = code.slice(0, macroStart) + negative + code.slice(index)
-					}
+					const skippedOffset = index - macroStart
+					const result = isPositive ? positive : negative
+					// Spacing added to keep the source map correct
+					const spacing = ' '.repeat(skippedOffset - result.length)
+
+					code =
+						code.slice(0, macroStart) + result + spacing + code.slice(index)
 
 					index = macroStart
 
@@ -853,8 +872,6 @@ export const preprocess = async (
 				{ code, index: lineStart },
 				{ offset: lineStart }
 			)
-
-			console.log({ result })
 
 			code = result.code
 			index = result.index
