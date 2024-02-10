@@ -36,8 +36,6 @@ it('parses nested macros', async () => {
 		}
 	)
 
-	console.log(result)
-
 	expect(result.code).toBe(
 		'                              \n                              \na'
 	)
