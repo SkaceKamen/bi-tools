@@ -35,7 +35,7 @@ async function main() {
 	await fs.promises.writeFile('tokens.json', JSON.stringify(tokens, null, 2))
 
 	console.time('parse')
-	const parsed = parseSqfTokens(tokens, preprocessed.code, { debug: false })
+	const parsed = parseSqfTokens(tokens, { debug: false })
 	console.timeEnd('parse')
 	await fs.promises.writeFile('parsed.json', JSON.stringify(parsed, null, 2))
 

@@ -12,7 +12,7 @@ export const parseSqf = async (input: string, filename: string) => {
 	const tokens = tokenizeSqf(preprocessed.code)
 
 	return {
-		ast: parseSqfTokens(tokens, preprocessed.code),
+		ast: parseSqfTokens(tokens),
 		sourceMap: preprocessed.sourceMap,
 	}
 }

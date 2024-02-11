@@ -54,18 +54,28 @@ const NUMBER_REST = /[0-9\.]/
 const IDENTIFIER_START = /[a-z_]/i
 const IDENTIFIER_REST = /[a-z0-9_]/i
 
-export const tokenizeSqf = (input: string): SqfToken[] => {
+export class TokenizerError extends Error {
+	constructor(message: string, public offset: number) {
+		super(message)
+	}
+}
+
+export const tokenizeSqf = (
+	input: string,
+	{ debug } = { debug: false }
+): SqfToken[] => {
 	let offset = 0
 	const tokens = [] as SqfToken[]
 
-	const parseError = (error: string) => {
-		// console.log(JSON.stringify(tokens, null, 2))
+	const raise = (error: string) => {
+		debug && console.log('Last tokens:', tokens.slice(-20))
+		debug && console.log('At:', input.slice(offset - 20, offset + 20))
 
-		const line = input.slice(0, offset).split('\n').length
-		const lastLineIndex = input.slice(0, offset).lastIndexOf('\n')
-		throw new Error(
-			`Parse error at ${line}:${offset - lastLineIndex}: ${error}`
-		)
+		throw new TokenizerError(error, offset)
+	}
+
+	const peek = (n: number, length = 1) => {
+		return input.slice(offset + n, offset + n + length)
 	}
 
 	const skipWhitespace = () => {
@@ -98,7 +108,7 @@ export const tokenizeSqf = (input: string): SqfToken[] => {
 		}
 
 		if (offset >= input.length) {
-			parseError('Unterminated string')
+			raise('Unterminated string')
 		}
 
 		return input.slice(start, offset + 1)
@@ -171,29 +181,48 @@ export const tokenizeSqf = (input: string): SqfToken[] => {
 
 	const readLineComment = () => {
 		const start = offset
-		while (offset < input.length && input[offset] !== '\n') {
+		let tokenEnd = offset
+
+		while (offset < input.length) {
+			if (peek(0) === '\n') {
+				tokenEnd = offset
+				offset += 1
+				break
+			}
+
+			if (peek(0, 2) === '\r\n') {
+				tokenEnd = offset
+				offset += 2
+				break
+			}
+
 			offset++
+
+			if (offset >= input.length) {
+				tokenEnd = offset
+			}
 		}
 
-		return input.slice(start, offset)
+		return input.slice(start, tokenEnd)
 	}
 
 	const readMultiLineComment = () => {
 		const start = offset
 		offset += 2
 
-		while (
-			offset < input.length - 1 &&
-			input.slice(offset, offset + 2) !== '*/'
-		) {
+		while (true) {
+			if (peek(0, 2) === '*/') {
+				offset += 2
+				break
+			}
+
 			offset++
+
+			if (offset >= input.length) {
+				raise('Unterminated multiline comment')
+			}
 		}
 
-		if (offset >= input.length) {
-			parseError('Unterminated multiline comment')
-		}
-
-		offset += 1
 		return input.slice(start, offset)
 	}
 
@@ -239,7 +268,6 @@ export const tokenizeSqf = (input: string): SqfToken[] => {
 				},
 			})
 
-			offset++
 			continue
 		}
 
@@ -260,7 +288,6 @@ export const tokenizeSqf = (input: string): SqfToken[] => {
 				},
 			})
 
-			offset++
 			continue
 		}
 
@@ -315,7 +342,7 @@ export const tokenizeSqf = (input: string): SqfToken[] => {
 			continue
 		}
 
-		parseError(`Unexpected character: ${char}`)
+		raise(`Unexpected character: ${char}`)
 	}
 
 	tokens.push({

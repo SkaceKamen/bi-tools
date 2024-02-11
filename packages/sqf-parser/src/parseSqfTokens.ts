@@ -74,7 +74,6 @@ export class SqfParserError extends Error {
 
 export const parseSqfTokens = (
 	sourceTokens: SqfToken[],
-	source: string,
 	{ debug = false } = {}
 ): SqfNode => {
 	const { ternaryOperators, binaryOperators, unaryOperators } = sqfOperators
@@ -201,23 +200,46 @@ export const parseSqfTokens = (
 	}
 
 	const parseExpression = (): SqfNode => {
+		// Ternary expression can't be easily detected so we just need to attempt to parse it
+		// Binary expression can also be unary, let's try to parse it as binary here
 		const expression =
-			tryParse(parseTernaryExpression) ??
-			tryParse(parseBinaryExpression) ??
-			tryParse(parseBrackets) ??
-			tryParse(parseCodeBlock) ??
-			tryParse(parseArray) ??
-			tryParse(parseLiteral) ??
-			tryParse(parseUnaryExpression)
+			tryParse(parseTernaryExpression) ?? tryParse(parseBinaryExpression)
 
-		if (!expression) {
+		if (expression) {
+			return expression
+		}
+
+		// Detect prefixed expressions
+		const token = peekToken(0)
+
+		// If it's ONLY binary operator, we can safely require to parse it as binary
+		if (isBinaryOperator(token) && !isUnaryOperator(token)) {
+			return parseBinaryExpression()
+		}
+
+		if (token.type === 'keyword' && token.contents === '(') {
+			return parseBrackets()
+		}
+
+		if (token.type === 'keyword' && token.contents === '{') {
+			return parseCodeBlock()
+		}
+
+		if (token.type === 'keyword' && token.contents === '[') {
+			return parseArray()
+		}
+
+		const expressionNow =
+			tryParse(parseLiteral) ?? tryParse(parseUnaryExpression)
+
+		if (!expressionNow) {
 			return raise(
 				tokens[index],
 				`Unexpected token: ${tokens[index].type} ${tokens[index].contents}`
 			)
 		}
 
-		return expression
+		return expressionNow
 	}
 
 	const parseExpressionWithoutTernary = (): SqfNode => {
@@ -236,8 +258,8 @@ export const parseSqfTokens = (
 		}
 
 		const expression =
-			tryParse(parseBinaryExpression) ??
 			tryParse(parseLiteral) ??
+			tryParse(parseBinaryExpression) ??
 			tryParse(parseUnaryExpression)
 
 		if (!expression) {
@@ -281,12 +303,9 @@ export const parseSqfTokens = (
 				'parseTernaryExpression'
 			)
 
-		if (index + 3 >= tokens.length) {
-			raise(tokens[index], 'Unexpected end of file')
-		}
-
 		const left = parseExpressionWithoutTernary()
 
+		// Accumulate all continuation ternary operators
 		const rightChildren = [] as { operator: SqfToken; right: SqfNode }[]
 		while (true) {
 			const operator = tokens[index]
@@ -301,6 +320,7 @@ export const parseSqfTokens = (
 			rightChildren.push({ operator, right: token })
 		}
 
+		// Build the proper AST from the right
 		let result: SqfTernaryExpressionNode | undefined
 		for (const item of rightChildren) {
 			const thisLeft = result ?? left
@@ -315,6 +335,7 @@ export const parseSqfTokens = (
 			}
 		}
 
+		// No result, no operator, throw
 		if (!result) {
 			return raise(tokens[index], 'Expected ternary expression')
 		}
@@ -335,10 +356,6 @@ export const parseSqfTokens = (
 				tokens[index].contents,
 				'parseBinaryExpression'
 			)
-
-		if (index + 2 >= tokens.length) {
-			raise(tokens[index], 'Unexpected end of file')
-		}
 
 		const operator = tokens[index]
 		if (!isBinaryOperator(operator)) {

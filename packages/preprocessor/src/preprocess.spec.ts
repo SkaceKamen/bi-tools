@@ -132,3 +132,14 @@ it('expands from the left', async () => {
 		'                              \n                \n[a,b]'
 	)
 })
+
+it('allows arrays with multiple elements as single arg', async () => {
+	const result = await preprocess(
+		'#define MACRO1(arg1) arg1\nMACRO1(format ["%1, ahoj", b])',
+		{
+			filename: '',
+		}
+	)
+
+	expect(result.code).toBe('                         \nformat ["%1, ahoj", b]')
+})

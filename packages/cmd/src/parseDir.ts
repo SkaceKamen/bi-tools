@@ -21,7 +21,7 @@ async function main() {
 				filename: filePath,
 			})
 			const tokens = tokenizeSqf(preprocessed.code)
-			const parsed = parseSqfTokens(tokens, preprocessed.code)
+			const parsed = parseSqfTokens(tokens)
 			const lintIssues = lintSqf(parsed, preprocessed.code)
 
 			if (lintIssues.length > 0) {

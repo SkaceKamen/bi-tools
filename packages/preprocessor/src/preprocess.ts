@@ -415,20 +415,29 @@ export const preprocess = async (
 				if (macro.args.length > 0) {
 					const inputArgs = [] as string[]
 					let argAcc = ''
-					let depth = 1
+					let bracesDepth = 1
+					let arrayDepth = 0
 
 					// Collect arguments
 					while (internalIndex < input.length) {
 						if (input[internalIndex] === '(') {
-							depth++
+							bracesDepth++
 						}
 
 						if (input[internalIndex] === ')') {
-							depth--
+							bracesDepth--
 
-							if (depth === 0) {
+							if (bracesDepth === 0) {
 								break
 							}
+						}
+
+						if (input[internalIndex] === '[') {
+							arrayDepth++
+						}
+
+						if (input[internalIndex] === ']') {
+							arrayDepth--
 						}
 
 						// TODO: Escaping
@@ -457,7 +466,11 @@ export const preprocess = async (
 							continue
 						}
 
-						if (input[internalIndex] === ',' && depth === 1) {
+						if (
+							input[internalIndex] === ',' &&
+							bracesDepth === 1 &&
+							arrayDepth === 0
+						) {
 							inputArgs.push(argAcc)
 							argAcc = ''
 							internalIndex++
