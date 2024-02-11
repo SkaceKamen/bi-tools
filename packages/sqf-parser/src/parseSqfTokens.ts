@@ -75,8 +75,11 @@ export class SqfParserError extends Error {
 export const parseSqfTokens = (
 	sourceTokens: SqfToken[],
 	{ debug = false } = {}
-): SqfNode => {
+) => {
 	const { ternaryOperators, binaryOperators, unaryOperators } = sqfOperators
+
+	// We'll attempt to recover from errors
+	const errors: SqfParserError[] = []
 
 	let index = 0
 
@@ -183,6 +186,30 @@ export const parseSqfTokens = (
 				}
 			} catch (err) {
 				debug && console.log(JSON.stringify(body[body.length - 1], null, 2))
+
+				// Attempt to recover from error
+				if (err instanceof SqfParserError) {
+					const errorEncounteredAt = index
+
+					errors.push(err)
+
+					// Try to skip to next command
+					while (
+						index < tokens.length &&
+						!isExpressionSeparator(tokens[index]) &&
+						!isEnd(tokens[index])
+					) {
+						index++
+					}
+
+					// This shouldn't happen, but just in case to prevent infinite loops
+					if (errorEncounteredAt === index) {
+						throw err
+					}
+
+					continue
+				}
+
 				throw err
 			}
 
@@ -464,8 +491,42 @@ export const parseSqfTokens = (
 				break
 			}
 
-			const element = parseExpression()
-			elements.push(element)
+			try {
+				const element = parseExpression()
+				elements.push(element)
+			} catch (err) {
+				// Attempt to recover from error
+				if (err instanceof SqfParserError) {
+					const errorEncounteredAt = index
+
+					errors.push(err)
+
+					// Try to skip to next command
+					while (index < tokens.length) {
+						// We've potentially reached end of array, just stop, the token will be eaten next iteration
+						if (peekToken(0).contents === ']') {
+							break
+						}
+
+						// We skipped to , so we just skip it and continue parsing
+						if (peekToken(0).contents === ',') {
+							index++
+							break
+						}
+
+						index++
+					}
+
+					// This shouldn't happen, but just in case to prevent infinite loops
+					if (errorEncounteredAt === index) {
+						throw err
+					}
+
+					continue
+				}
+
+				throw err
+			}
 
 			const next = peekToken(0)
 
@@ -475,8 +536,6 @@ export const parseSqfTokens = (
 			}
 
 			if (!(next.type === 'keyword' && next.contents === ',')) {
-				debug && console.log(JSON.stringify(element, null, 2))
-
 				raise(next, 'Expected , or ]')
 			}
 
@@ -541,9 +600,12 @@ export const parseSqfTokens = (
 	const body = parseCode(isEof)
 
 	return {
-		type: 'script',
-		body,
-		start: 0,
-		end: body[body.length - 1]?.end ?? 0,
+		errors,
+		script: {
+			type: 'script',
+			body,
+			start: 0,
+			end: body[body.length - 1]?.end ?? 0,
+		} as SqfNode,
 	}
 }

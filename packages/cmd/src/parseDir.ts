@@ -22,7 +22,7 @@ async function main() {
 			})
 			const tokens = tokenizeSqf(preprocessed.code)
 			const parsed = parseSqfTokens(tokens)
-			const lintIssues = lintSqf(parsed, preprocessed.code)
+			const lintIssues = lintSqf(parsed.script, preprocessed.code)
 
 			if (lintIssues.length > 0) {
 				console.log(filePath)

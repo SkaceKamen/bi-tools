@@ -39,22 +39,26 @@ async function main() {
 	console.timeEnd('parse')
 	await fs.promises.writeFile('parsed.json', JSON.stringify(parsed, null, 2))
 
+	console.log(JSON.stringify(parsed.errors, null, 2))
+
 	console.time('lint')
-	const linerIssues = lintSqf(parsed, preprocessed.code)
+	const linerIssues = lintSqf(parsed.script, preprocessed.code)
 	//console.log(stringify(parsed))
 	console.timeEnd('lint')
 
+	/*
 	console.log(JSON.stringify(linerIssues.slice(0, 5), null, 2))
 
 	console.log(
 		JSON.stringify(
 			Object.fromEntries(
-				analyzeSqf(parsed, tokens, preprocessed.code).variables.entries()
+				analyzeSqf(parsed.script, tokens, preprocessed.code).variables.entries()
 			),
 			null,
 			2
 		)
 	)
+	*/
 }
 
 main().catch(console.error)
