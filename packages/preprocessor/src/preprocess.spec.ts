@@ -119,3 +119,16 @@ it('glues together nested macro values from both sides', async () => {
 		'                                       \n                \ntst_tst'
 	)
 })
+
+it('expands from the left', async () => {
+	const result = await preprocess(
+		'#define MACRO1(arg1,arg2) arg2\n#define TEST a,b\nMACRO1(aha,[TEST])',
+		{
+			filename: '',
+		}
+	)
+
+	expect(result.code).toBe(
+		'                              \n                \n[a,b]'
+	)
+})

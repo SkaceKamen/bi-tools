@@ -504,16 +504,12 @@ export const preprocess = async (
 							] as const
 					)
 
-					console.log('expand', macro.name, 'with', expandedInputArgs)
-
 					// Apply arguments
 					fullyResolvedValue = applyMacros(
 						{ code: fullyResolvedValue, index: 0 },
 						undefined,
 						new Map(expandedInputArgs)
 					).code
-
-					console.log('Expanded into', fullyResolvedValue)
 				}
 
 				// For source mapping, we need the full macro call length
