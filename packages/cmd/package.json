@@ -9,6 +9,7 @@
 	"dependencies": {
 		"@bi-tools/config-parser": "^1.0.0",
 		"@bi-tools/enforce-script-parser": "^1.0.0",
+		"@bi-tools/pbo-reader": "^1.0.0",
 		"@bi-tools/preprocessor": "^1.0.0",
 		"@bi-tools/sqf-analyzer": "^1.0.0",
 		"@bi-tools/sqf-linter": "^1.0.0",

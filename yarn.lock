@@ -18,6 +18,7 @@ __metadata:
   dependencies:
     "@bi-tools/config-parser": ^1.0.0
     "@bi-tools/enforce-script-parser": ^1.0.0
+    "@bi-tools/pbo-reader": ^1.0.0
     "@bi-tools/preprocessor": ^1.0.0
     "@bi-tools/sqf-analyzer": ^1.0.0
     "@bi-tools/sqf-linter": ^1.0.0
@@ -34,6 +35,14 @@ __metadata:
 "@bi-tools/enforce-script-parser@^1.0.0, @bi-tools/enforce-script-parser@workspace:packages/enforce-script-parser":
   version: 0.0.0-use.local
   resolution: "@bi-tools/enforce-script-parser@workspace:packages/enforce-script-parser"
+  languageName: unknown
+  linkType: soft
+
+"@bi-tools/pbo-reader@^1.0.0, @bi-tools/pbo-reader@workspace:packages/pbo-reader":
+  version: 0.0.0-use.local
+  resolution: "@bi-tools/pbo-reader@workspace:packages/pbo-reader"
+  dependencies:
+    "@bi-tools/sqf-parser": ^1.0.0
   languageName: unknown
   linkType: soft
 

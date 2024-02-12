@@ -20,7 +20,8 @@
 		{ "path": "./packages/sqf-analyzer" },
 		{ "path": "./packages/sqf-linter" },
 		{ "path": "./packages/enforce-script-parser" },
-		{ "path": "./packages/config-parser" }
+		{ "path": "./packages/config-parser" },
+		{ "path": "./packages/pbo-reader" }
 		//{ "path": "./packages/cmd" }
 	]
 }

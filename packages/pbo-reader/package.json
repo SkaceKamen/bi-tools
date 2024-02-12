@@ -1,0 +1,11 @@
+{
+	"name": "@bi-tools/pbo-reader",
+	"version": "1.0.0",
+	"description": "Reads PBO packages",
+	"author": "",
+	"license": "MIT",
+	"main": "dist/index.js",
+	"dependencies": {
+		"@bi-tools/sqf-parser": "^1.0.0"
+	}
+}
