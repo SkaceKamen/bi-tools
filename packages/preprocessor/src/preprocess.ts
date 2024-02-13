@@ -22,7 +22,7 @@ export type SourceMapItem = {
 type MacroItem = {
 	name: string
 	args: string[]
-	value: string
+	value: string | (() => string)
 	file: string
 	location: [from: number, to: number]
 	valueLocation: [from: number, to: number]
@@ -74,6 +74,26 @@ export const preprocess = async (
 	const sourceMap = [] as SourceMapItem[]
 
 	let index = 0
+	let line = 0
+
+	const dynamicMacro = (name: string, value: string | (() => string)) => {
+		const location = [0, 0] as [number, number]
+
+		return {
+			name,
+			args: [],
+			value,
+			file: filename,
+			location,
+			valueLocation: location,
+		}
+	}
+
+	const standardMacros = new Map<string, MacroItem>([
+		['__LINE__', dynamicMacro('__LINE__', () => line.toString())],
+		['__FILE__', dynamicMacro('__FILE__', () => filename.toString())],
+		// TODO: Define the rest of the macros
+	])
 
 	const raise = (message: string) => {
 		const offset = index
@@ -129,8 +149,9 @@ export const preprocess = async (
 	const skipNewLines = () => {
 		while (
 			index < code.length &&
-			(code[index] === '\n' || code[index] === '\r')
+			(code[index] === '\n' || code.slice(index, index + 2) === '\r\n')
 		) {
+			line++
 			index++
 		}
 	}
@@ -227,11 +248,13 @@ export const preprocess = async (
 
 			if (peek(0) === '\\') {
 				if (peek(1) === '\r' && peek(2) === '\n') {
+					line++
 					index += 3
 					continue
 				}
 
 				if (peek(1) === '\n') {
+					line++
 					index += 2
 					continue
 				}
@@ -358,14 +381,12 @@ export const preprocess = async (
 			const macroStart = internalIndex
 
 			let identifierPrefix = ''
-			if (overrideDefines) {
-				if (input.slice(internalIndex, internalIndex + 2) === '##') {
-					identifierPrefix += '##'
-					internalIndex += 2
-				} else if (input[internalIndex] === '#') {
-					identifierPrefix += '#'
-					internalIndex++
-				}
+			if (input.slice(internalIndex, internalIndex + 2) === '##') {
+				identifierPrefix += '##'
+				internalIndex += 2
+			} else if (input[internalIndex] === '#') {
+				identifierPrefix += '#'
+				internalIndex++
 			}
 
 			let identifier = ''
@@ -379,16 +400,15 @@ export const preprocess = async (
 				internalIndex++
 			}
 
-			const matchingMacro = (overrideDefines ?? defines).get(identifier)
+			const matchingMacro =
+				standardMacros.get(identifier) ??
+				(overrideDefines ?? defines).get(identifier)
 
 			if (matchingMacro) {
 				let identifierPostfix = ''
 
 				// Ending glue
-				if (
-					overrideDefines &&
-					input.slice(internalIndex, internalIndex + 2) === '##'
-				) {
+				if (input.slice(internalIndex, internalIndex + 2) === '##') {
 					identifierPostfix = '##'
 					internalIndex += 2
 				}
@@ -400,8 +420,10 @@ export const preprocess = async (
 				const macro = matchingMacro
 				const { value } = macro
 
-				let fullyResolvedValue =
-					identifierPrefix === '#' ? '"' + value + '"' : value
+				let fullyResolvedValue = typeof value === 'function' ? value() : value
+				if (identifierPrefix === '#') {
+					fullyResolvedValue = `"${fullyResolvedValue}"`
+				}
 
 				// Glueing together stuff can be tricky, let's resolve what we're resolving first
 				if (identifierPrefix === '##' || identifierPostfix === '##') {

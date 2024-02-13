@@ -6,7 +6,8 @@
   "scripts": {
     "test": "vitest",
     "build": "tsc -b",
-    "watch": "tsc -b -w"
+    "watch": "tsc -b -w",
+		"publish": "yarn workspaces foreach --no-private npm publish --public"
   },
   "devDependencies": {
     "@types/node": "^20.1.7",
