@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest'
 import { preprocess } from './preprocess'
+import { getMappedOffsetAt } from './getMappedOffsetAt'
 
 it('properly concat arguments', async () => {
 	const result = await preprocess(
@@ -142,4 +143,47 @@ it('allows arrays with multiple elements as single arg', async () => {
 	)
 
 	expect(result.code).toBe('                         \nformat ["%1, ahoj", b]')
+})
+
+it('allows multiline macros with escapes', async () => {
+	const result = await preprocess('#define MACRO1 test\\\ntest\nMACRO1', {
+		filename: '',
+	})
+
+	expect(result.code).toBe('                         \ntesttest')
+})
+
+it('provides proper source maps when using macros', async () => {
+	const result = await preprocess(
+		'#define MACRO1(arg1) test##arg1\\\ntest\nMACRO1("aj")\n_arr select 1',
+		{
+			filename: 'test',
+		}
+	)
+
+	const resolved = getMappedOffsetAt(result.sourceMap, 55, 'test')
+
+	expect(result.sourceMap).toEqual([
+		{
+			offset: 76,
+			fileOffset: 37,
+			file: 'test',
+		},
+		{
+			offset: 102,
+			fileOffset: 95,
+			file: 'test',
+		},
+	])
+
+	expect(resolved.file).toBe('test')
+	expect(resolved.offset).toBe(55)
+})
+
+it('properly replaces conditions with spacing', async () => {
+	const source =
+		'#ifndef MACRO1#ifdef MACRO2\nahaha\n#endif\n_arr select 1\n#endif\n_arr select 2'
+	const result = await preprocess(source, { filename: 'test' })
+
+	expect(result.code).toHaveLength(source.length)
 })

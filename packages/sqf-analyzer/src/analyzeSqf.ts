@@ -10,6 +10,18 @@ const isStringLiteral = (
 ): node is SqfLiteralNode & { value: string } =>
 	node.type === 'literal' && typeof node.value === 'string'
 
+const determineType = (node: SqfNode) => {
+	if (node.type === 'literal') {
+		if (typeof node.value === 'string') {
+			return 'string'
+		} else if (typeof node.value === 'number') {
+			return 'scalar'
+		}
+	}
+
+	return undefined
+}
+
 export const analyzeSqf = (
 	node: SqfNode,
 	sourceTokens: SqfToken[],
@@ -20,7 +32,11 @@ export const analyzeSqf = (
 		string,
 		{
 			originalName: string
-			assignments: { position: [from: number, to: number]; comment?: string }[]
+			assignments: {
+				position: [from: number, to: number]
+				comment?: string
+				type?: string
+			}[]
 			usage: [from: number, to: number][]
 		}
 	>()
@@ -59,6 +75,7 @@ export const analyzeSqf = (
 				getVariable(name).assignments.push({
 					position: [node.start, node.end],
 					comment,
+					type: determineType(node.init),
 				})
 
 				break

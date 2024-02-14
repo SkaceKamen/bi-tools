@@ -45,6 +45,8 @@ export type Preprocessed = {
 	code: string
 	defines: Map<string, MacroItem>
 	sourceMap: SourceMapItem[]
+	/** Map resolved includes in format of filename => resolved filename */
+	includes: Map<string, string>
 }
 
 const localFsResolve = async (includeParam: string, sourceFilename: string) => {
@@ -72,6 +74,7 @@ export const preprocess = async (
 	}: Options
 ): Promise<Preprocessed> => {
 	const sourceMap = [] as SourceMapItem[]
+	const includes = new Map<string, string>()
 
 	let index = 0
 	let line = 0
@@ -91,7 +94,7 @@ export const preprocess = async (
 
 	const standardMacros = new Map<string, MacroItem>([
 		['__LINE__', dynamicMacro('__LINE__', () => line.toString())],
-		['__FILE__', dynamicMacro('__FILE__', () => filename.toString())],
+		['__FILE__', dynamicMacro('__FILE__', () => `"${filename}"`)],
 		// TODO: Define the rest of the macros
 	])
 
@@ -414,7 +417,7 @@ export const preprocess = async (
 				}
 
 				const mappedOffset = sourceMapOptions
-					? getMappedOffsetAt(sourceMapOptions.offset + internalIndex)
+					? getMappedOffsetAt(internalIndex)
 					: null
 
 				const macro = matchingMacro
@@ -558,16 +561,13 @@ export const preprocess = async (
 
 				if (sourceMapOptions && mappedOffset) {
 					sourceMap.push({
-						offset: sourceMapOptions.offset + macroStart,
+						offset: macroStart,
 						fileOffset: macro.valueLocation[0],
 						file: macro.file,
 					})
 
 					sourceMap.push({
-						offset:
-							sourceMapOptions.offset +
-							internalIndex +
-							fullyResolvedValue.length,
+						offset: internalIndex + fullyResolvedValue.length,
 						fileOffset: mappedOffset.offset + (internalIndex - macroStart),
 						file: mappedOffset.file,
 					})
@@ -713,6 +713,8 @@ export const preprocess = async (
 					const resolved = await resolveFn(file, filename, [macroStart, index])
 					const filePath = resolved.filename
 
+					includes.set(file, resolved.filename)
+
 					const included = await preprocess(resolved.contents, {
 						filename: filePath,
 						defines,
@@ -828,7 +830,7 @@ export const preprocess = async (
 
 				case 'ifndef':
 				case 'ifdef': {
-					const mappedOffsetStart = getMappedOffsetAt(macroStart)
+					// const mappedOffsetStart = getMappedOffsetAt(macroStart)
 
 					expectWhitespace()
 
@@ -838,8 +840,6 @@ export const preprocess = async (
 					const isPositive =
 						(command === 'ifdef' && isDefined) ||
 						(command === 'ifndef' && !isDefined)
-
-					// console.log({ command, condition, isDefined, isPositive })
 
 					const skippedOffset = index - macroStart
 					const result = isPositive ? positive : negative
@@ -851,11 +851,13 @@ export const preprocess = async (
 
 					index = macroStart
 
+					/*
 					sourceMap.push({
 						offset: index,
 						fileOffset: mappedOffsetStart.offset,
 						file: mappedOffsetStart.file,
 					})
+					*/
 
 					break
 				}
@@ -913,5 +915,6 @@ export const preprocess = async (
 		code,
 		sourceMap,
 		defines,
+		includes,
 	}
 }
