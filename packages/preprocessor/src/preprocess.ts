@@ -45,8 +45,8 @@ export type Preprocessed = {
 	code: string
 	defines: Map<string, MacroItem>
 	sourceMap: SourceMapItem[]
-	/** Map resolved includes in format of filename => resolved filename */
-	includes: Map<string, string>
+	/** Map resolved includes in format of `document => filename used in include => resolved filename` */
+	includes: Map<string, Map<string, string>>
 }
 
 const localFsResolve = async (includeParam: string, sourceFilename: string) => {
@@ -74,7 +74,7 @@ export const preprocess = async (
 	}: Options
 ): Promise<Preprocessed> => {
 	const sourceMap = [] as SourceMapItem[]
-	const includes = new Map<string, string>()
+	const includes = new Map<string, Map<string, string>>()
 
 	let index = 0
 	let line = 0
@@ -102,8 +102,6 @@ export const preprocess = async (
 		const offset = index
 		const line = code.slice(0, offset).split('\n').length
 		const lastLineIndex = code.slice(0, offset).lastIndexOf('\n')
-
-		console.log(code)
 
 		throw new PreprocessorError(
 			`Parse error at ${line}:${offset - lastLineIndex}: ${message}`
@@ -709,7 +707,11 @@ export const preprocess = async (
 					const resolved = await resolveFn(file, filename, [macroStart, index])
 					const filePath = resolved.filename
 
-					includes.set(file, resolved.filename)
+					if (!includes.has(mappedOffsetStart.file)) {
+						includes.set(mappedOffsetStart.file, new Map())
+					}
+
+					includes.get(mappedOffsetStart.file)?.set(file, resolved.filename)
 
 					const included = await preprocess(resolved.contents, {
 						filename: filePath,
