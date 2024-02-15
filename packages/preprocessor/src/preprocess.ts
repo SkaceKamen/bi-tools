@@ -550,10 +550,6 @@ export const preprocess = async (
 					).code
 				}
 
-				// For source mapping, we need the full macro call length
-				/*const fullMacroCall =
-					name + (thisArgs.length > 0 ? '(' + thisArgs + ')' : '')*/
-
 				input =
 					input.slice(0, macroStart) +
 					fullyResolvedValue +
@@ -567,7 +563,7 @@ export const preprocess = async (
 					})
 
 					sourceMap.push({
-						offset: internalIndex + fullyResolvedValue.length,
+						offset: macroStart + fullyResolvedValue.length,
 						fileOffset: mappedOffset.offset + (internalIndex - macroStart),
 						file: mappedOffset.file,
 					})
