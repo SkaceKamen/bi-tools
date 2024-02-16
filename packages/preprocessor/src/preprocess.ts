@@ -414,10 +414,6 @@ export const preprocess = async (
 					internalIndex += 2
 				}
 
-				const mappedOffset = sourceMapOptions
-					? getMappedOffsetAt(internalIndex)
-					: null
-
 				const macro = matchingMacro
 				const { value } = macro
 
@@ -553,6 +549,10 @@ export const preprocess = async (
 					fullyResolvedValue +
 					input.slice(internalIndex)
 
+				const mappedOffset = sourceMapOptions
+					? getMappedOffsetAt(macroStart)
+					: null
+
 				if (sourceMapOptions && mappedOffset) {
 					sourceMap.push({
 						offset: macroStart,
@@ -562,6 +562,7 @@ export const preprocess = async (
 
 					sourceMap.push({
 						offset: macroStart + fullyResolvedValue.length,
+						// TODO: Not sure about the (internalIndex - macroStart) here, is it correct?
 						fileOffset: mappedOffset.offset + (internalIndex - macroStart),
 						file: mappedOffset.file,
 					})
@@ -581,6 +582,10 @@ export const preprocess = async (
 	const parseConditionBodies = () => {
 		let positive = ''
 		let negative = ''
+		const positiveStart = index
+		let positiveEnd = index
+		let negativeStart = index
+		let negativeEnd = index
 
 		let isInPositive = true
 
@@ -632,6 +637,12 @@ export const preprocess = async (
 				index += '#endif'.length
 
 				if (depth === 0) {
+					if (isInPositive) {
+						positiveEnd = index
+					} else {
+						negativeEnd = index
+					}
+
 					break
 				} else {
 					if (isInPositive) {
@@ -643,7 +654,9 @@ export const preprocess = async (
 			}
 
 			if (code.slice(index, index + '#else'.length) === '#else') {
+				positiveEnd = index
 				index += '#else'.length
+				negativeStart = index
 				isInPositive = false
 				continue
 			}
@@ -657,7 +670,13 @@ export const preprocess = async (
 			index++
 		}
 
-		return { positive, negative }
+		return {
+			positive,
+			positiveLocation: [positiveStart, positiveEnd],
+			positiveEnd,
+			negative,
+			negativeLocation: [negativeStart, negativeEnd],
+		}
 	}
 
 	const skipComments = () => {
@@ -780,6 +799,8 @@ export const preprocess = async (
 
 					let value = ''
 
+					const mappedValueOffsetStart = getMappedOffsetAt(index)
+
 					if (
 						code[index] === '\n' ||
 						(code[index] === '\r' && code[index + 1] === '\n')
@@ -788,9 +809,6 @@ export const preprocess = async (
 					} else {
 						value = parseMacroValue()
 					}
-
-					const mappedValueOffsetStart = getMappedOffsetAt(index)
-
 					const mappedOffsetEnd = getMappedOffsetAt(index)
 
 					debug && console.log('define', { name, args, value })
@@ -828,34 +846,43 @@ export const preprocess = async (
 
 				case 'ifndef':
 				case 'ifdef': {
-					// const mappedOffsetStart = getMappedOffsetAt(macroStart)
-
 					expectWhitespace()
 
 					const condition = parseMacroName(false).name
-					const { positive, negative } = parseConditionBodies()
+					const { positive, positiveLocation, negative, negativeLocation } =
+						parseConditionBodies()
 					const isDefined = defines.has(condition)
 					const isPositive =
 						(command === 'ifdef' && isDefined) ||
 						(command === 'ifndef' && !isDefined)
 
-					const skippedOffset = index - macroStart
 					const result = isPositive ? positive : negative
-					// Spacing added to keep the source map correct
-					const spacing = ' '.repeat(skippedOffset - result.length)
+					const resultLocation = isPositive
+						? positiveLocation
+						: negativeLocation
+
+					const spacing = ' '.repeat(index - macroStart - result.length)
+
+					const mappedConditionsEnd = getMappedOffsetAt(index)
 
 					code =
 						code.slice(0, macroStart) + result + spacing + code.slice(index)
 
 					index = macroStart
 
-					/*
+					const mappedResultStart = getMappedOffsetAt(resultLocation[0])
+
 					sourceMap.push({
-						offset: index,
-						fileOffset: mappedOffsetStart.offset,
-						file: mappedOffsetStart.file,
+						offset: macroStart,
+						fileOffset: mappedResultStart.offset,
+						file: mappedResultStart.file,
 					})
-					*/
+
+					sourceMap.push({
+						offset: macroStart + result.length + spacing.length,
+						fileOffset: mappedConditionsEnd.offset,
+						file: mappedConditionsEnd.file,
+					})
 
 					break
 				}

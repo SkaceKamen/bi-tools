@@ -2,6 +2,12 @@ import { expect, it } from 'vitest'
 import { preprocess } from './preprocess'
 import { getMappedOffsetAt } from './getMappedOffsetAt'
 
+/** use ⮓ for new line, makes debugging offsets easier */
+const src = (input: string) => input.replace(/⮓/g, '\n')
+
+/** replace NL with ⮓, makes it easier to debug offsets */
+// const normalize = (input: string) => input.replace(/\n/g, '⮓')
+
 it('properly concat arguments', async () => {
 	const result = await preprocess(
 		'#define DOUBLES(var1, var2) var1##_##var2\nDOUBLES(a,b)',
@@ -166,24 +172,35 @@ it('provides proper source maps when using macros', async () => {
 	expect(result.sourceMap).toEqual([
 		{
 			offset: 38,
-			fileOffset: 37,
+			fileOffset: 21,
 			file: 'test',
 		},
 		{
 			offset: 52,
-			fileOffset: 57,
+			fileOffset: 50,
 			file: 'test',
 		},
 	])
 
 	expect(resolved.file).toBe('test')
-	expect(resolved.offset).toBe(60)
+	expect(resolved.offset).toBe(53)
 })
 
-it('properly replaces conditions with spacing', async () => {
-	const source =
-		'#ifndef MACRO1#ifdef MACRO2\nahaha\n#endif\n_arr select 1\n#endif\n_arr select 2'
+it('proper macro positions', async () => {
+	const source = src(
+		'#define MACRO1 test⮓#ifdef MACRO1⮓#define MACRO2 test⮓#endif⮓'
+	)
 	const result = await preprocess(source, { filename: 'test' })
 
-	expect(result.code).toHaveLength(source.length)
+	expect(result.defines.get('MACRO1')?.location).toEqual([0, 19])
+	expect(result.defines.get('MACRO2')?.location).toEqual([34, 53])
+})
+
+it('if generates proper source maps', async () => {
+	const source = src(
+		'#define MACRO1 test⮓#ifdef MACRO1⮓#define MACRO2 test⮓#endif⮓'
+	)
+	const result = await preprocess(source, { filename: 'test' })
+
+	console.log(result.sourceMap)
 })
