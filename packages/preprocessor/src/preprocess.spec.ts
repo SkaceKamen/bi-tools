@@ -165,19 +165,19 @@ it('provides proper source maps when using macros', async () => {
 
 	expect(result.sourceMap).toEqual([
 		{
-			offset: 76,
+			offset: 38,
 			fileOffset: 37,
 			file: 'test',
 		},
 		{
-			offset: 102,
-			fileOffset: 95,
+			offset: 52,
+			fileOffset: 57,
 			file: 'test',
 		},
 	])
 
 	expect(resolved.file).toBe('test')
-	expect(resolved.offset).toBe(55)
+	expect(resolved.offset).toBe(60)
 })
 
 it('properly replaces conditions with spacing', async () => {
