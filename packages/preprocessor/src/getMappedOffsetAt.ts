@@ -7,6 +7,8 @@ export const getMappedOffsetAt = (
 	defaultFile: string,
 	startAtIndex?: number
 ) => {
+	/*
+	TODO: There is a bug in this:
 	// Skip if the offset is out of range
 	const lastItem = sourceMap[sourceMap.length - 1]
 	if (!lastItem) {
@@ -41,15 +43,18 @@ export const getMappedOffsetAt = (
 
 	const item = sourceMap[mid - 1]
 	const itemIndex = mid - 1
+	*/
 
-	/*
-	const itemIndex = sourceMap.findIndex((item) => offset > item.offset) - 1
+	const lastItemIndex = sourceMap.findIndex((item) => item.offset > offset)
+	const itemIndex =
+		sourceMap.length > 0 && lastItemIndex < 0
+			? sourceMap.length - 1
+			: lastItemIndex - 1
 	const item = sourceMap[itemIndex]
 
 	if (!item) {
 		return { file: defaultFile, offset, itemIndex: null }
 	}
-	*/
 
 	return {
 		offset: item.fileOffset + (offset - item.offset),

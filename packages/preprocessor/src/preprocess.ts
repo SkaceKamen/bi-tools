@@ -554,6 +554,13 @@ export const preprocess = async (
 					: null
 
 				if (sourceMapOptions && mappedOffset) {
+					console.log(
+						'Pushing source map at',
+						macroStart,
+						{ mappedOffset, macroStart, internalIndex },
+						fullyResolvedValue.length
+					)
+
 					sourceMap.push({
 						offset: macroStart,
 						fileOffset: macro.valueLocation[0],
@@ -566,6 +573,11 @@ export const preprocess = async (
 						fileOffset: mappedOffset.offset + (internalIndex - macroStart),
 						file: mappedOffset.file,
 					})
+
+					console.log('Current map')
+					for (const item of sourceMap) {
+						console.log(' ', item.offset, '->', item.fileOffset)
+					}
 				}
 
 				internalIndex = macroStart

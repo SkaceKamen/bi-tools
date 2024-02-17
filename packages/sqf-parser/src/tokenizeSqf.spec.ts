@@ -6,15 +6,12 @@ test('parses strings', () => {
 		{
 			type: 'string',
 			contents: "'test'",
-			position: {
-				from: 0,
-				to: 5,
-			},
+			position: [0, 5],
 		},
 		{
 			contents: '',
 			type: 'eof',
-			position: { from: 6, to: 6 },
+			position: [6, 6],
 		},
 	])
 
@@ -22,15 +19,12 @@ test('parses strings', () => {
 		{
 			type: 'string',
 			contents: '"test"',
-			position: {
-				from: 0,
-				to: 5,
-			},
+			position: [0, 5],
 		},
 		{
 			contents: '',
 			type: 'eof',
-			position: { from: 6, to: 6 },
+			position: [6, 6],
 		},
 	])
 })
@@ -40,30 +34,24 @@ test('parses strings with escapes', () => {
 		{
 			type: 'string',
 			contents: '"te""st"',
-			position: {
-				from: 0,
-				to: 7,
-			},
+			position: [0, 7],
 		},
 		{
 			contents: '',
 			type: 'eof',
-			position: { from: 8, to: 8 },
+			position: [8, 8],
 		},
 	])
 	expect(tokenizeSqf("'te''st'")).toEqual([
 		{
 			type: 'string',
 			contents: "'te''st'",
-			position: {
-				from: 0,
-				to: 7,
-			},
+			position: [0, 7],
 		},
 		{
 			contents: '',
 			type: 'eof',
-			position: { from: 8, to: 8 },
+			position: [8, 8],
 		},
 	])
 })
