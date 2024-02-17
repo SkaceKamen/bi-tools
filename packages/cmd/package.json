@@ -13,6 +13,7 @@
 		"@bi-tools/preprocessor": "^1.0.0",
 		"@bi-tools/sqf-analyzer": "^1.0.0",
 		"@bi-tools/sqf-linter": "^1.0.0",
-		"@bi-tools/sqf-parser": "^1.0.0"
+		"@bi-tools/sqf-parser": "^1.0.0",
+		"glob": "^10.3.10"
 	}
 }

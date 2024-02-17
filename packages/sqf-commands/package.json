@@ -1,0 +1,15 @@
+{
+	"name": "@bi-tools/sqf-commands",
+	"version": "1.0.0",
+	"description": "Info about SQF commands",
+	"author": "",
+	"license": "MIT",
+	"main": "dist/src/index.js",
+	"devDependencies": {
+		"@types/node-fetch": "^2.6.11",
+		"@types/xmldoc": "^1.1.9",
+		"node-fetch": "^2",
+		"wikiparser-node": "^1.4.5",
+		"xmldoc": "^1.3.0"
+	}
+}
