@@ -6,7 +6,7 @@ export const indentationRule = defineRule({
 	walk(node, ctx) {
 		const isFirstNode = (node: SqfNode) => {
 			let previousLineIndex = ctx.sourceCode
-				.slice(0, node.start)
+				.slice(0, node.position[0])
 				.lastIndexOf('\n')
 
 			if (previousLineIndex < 0) {
@@ -15,14 +15,14 @@ export const indentationRule = defineRule({
 
 			return (
 				ctx.sourceCode
-					.slice(previousLineIndex + 1, node.start)
+					.slice(previousLineIndex + 1, node.position[0])
 					.match(/^[ \t]*$/) !== null
 			)
 		}
 
 		const getIndentOf = (node: SqfNode) => {
 			let previousLineIndex = ctx.sourceCode
-				.slice(0, node.start)
+				.slice(0, node.position[0])
 				.lastIndexOf('\n')
 
 			if (previousLineIndex < 0) {
@@ -30,9 +30,9 @@ export const indentationRule = defineRule({
 			}
 
 			return {
-				length: node.start - (previousLineIndex + 1),
+				length: node.position[0] - (previousLineIndex + 1),
 				start: previousLineIndex + 1,
-				end: node.start,
+				end: node.position[0],
 			}
 		}
 
@@ -44,7 +44,7 @@ export const indentationRule = defineRule({
 					ctx.report({
 						rule: 'indentation',
 						message: `Expected indentation of ${targetIndent}, but got ${indent.length}.`,
-						position: { start: indent.start, end: indent.end },
+						position: [indent.start, indent.end],
 					})
 				}
 

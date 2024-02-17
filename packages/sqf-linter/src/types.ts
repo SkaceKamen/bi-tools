@@ -5,7 +5,7 @@ export type RuleContext = {
 	root: SqfNode
 	report: (data: {
 		rule: string
-		position: { start: number; end: number }
+		position: [start: number, end: number]
 		message: string
 	}) => void
 }

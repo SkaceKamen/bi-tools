@@ -16,11 +16,8 @@ export const properCasingRule = defineRule({
 			if (definition && definition.title !== operator) {
 				ctx.report({
 					rule: 'proper-casing',
-					message: `Operator "${operator}" is not in the list of known operators`,
-					position: {
-						start: node.operator.position.from,
-						end: node.operator.position.to,
-					},
+					message: `"${operator}" should be "${definition.title}"`,
+					position: node.operator.position,
 				})
 			}
 		}

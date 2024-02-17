@@ -1,7 +1,4 @@
-type SqfTokenRange = {
-	from: number
-	to: number
-}
+type SqfTokenRange = [from: number, to: number]
 
 export type SqfToken = {
 	type:
@@ -242,10 +239,7 @@ export const tokenizeSqf = (
 			tokens.push({
 				type: 'number',
 				contents,
-				position: {
-					from: start,
-					to: offset + 1,
-				},
+				position: [start, offset + 1],
 			})
 
 			continue
@@ -262,10 +256,7 @@ export const tokenizeSqf = (
 			tokens.push({
 				type: 'line-comment',
 				contents,
-				position: {
-					from: start,
-					to: offset + 1,
-				},
+				position: [start, offset + 1],
 			})
 
 			continue
@@ -282,10 +273,7 @@ export const tokenizeSqf = (
 			tokens.push({
 				type: 'multi-line-comment',
 				contents,
-				position: {
-					from: start,
-					to: offset + 1,
-				},
+				position: [start, offset + 1],
 			})
 
 			continue
@@ -299,10 +287,7 @@ export const tokenizeSqf = (
 			tokens.push({
 				type: 'keyword',
 				contents: matchingKeyword,
-				position: {
-					from: offset,
-					to: offset + matchingKeyword.length,
-				},
+				position: [offset, offset + matchingKeyword.length],
 			})
 
 			offset += matchingKeyword.length
@@ -316,10 +301,7 @@ export const tokenizeSqf = (
 			tokens.push({
 				type: 'string',
 				contents,
-				position: {
-					from: start,
-					to: offset,
-				},
+				position: [start, offset],
 			})
 
 			offset++
@@ -333,10 +315,7 @@ export const tokenizeSqf = (
 			tokens.push({
 				type: 'identifier',
 				contents,
-				position: {
-					from: start,
-					to: offset,
-				},
+				position: [start, offset],
 			})
 
 			continue
@@ -348,10 +327,7 @@ export const tokenizeSqf = (
 	tokens.push({
 		type: 'eof',
 		contents: '',
-		position: {
-			from: offset,
-			to: offset,
-		},
+		position: [offset, offset],
 	})
 
 	return tokens

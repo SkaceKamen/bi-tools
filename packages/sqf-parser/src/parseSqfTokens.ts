@@ -2,7 +2,7 @@ import { sqfOperators } from './sqfOperators'
 import { SqfToken } from './tokenizeSqf'
 import { partition } from './utils'
 
-type SqfNodeBase = { start: number; end: number }
+type SqfNodeBase = { position: [from: number, to: number] }
 
 export type SqfScriptNode = SqfNodeBase & {
 	type: 'script'
@@ -357,8 +357,7 @@ export const parseSqfTokens = (
 				left: thisLeft,
 				operator: item.operator,
 				right: item.right,
-				start: thisLeft.start,
-				end: item.right.end,
+				position: [thisLeft.position[0], item.right.position[1]],
 			}
 		}
 
@@ -403,8 +402,7 @@ export const parseSqfTokens = (
 			type: 'binary-expression',
 			operator: operator,
 			right,
-			start: operator.position.from,
-			end: right.end,
+			position: [operator.position[0], right.position[1]],
 		}
 	}
 
@@ -435,16 +433,14 @@ export const parseSqfTokens = (
 			return {
 				type: 'variable',
 				id: token,
-				start: token.position.from,
-				end: token.position.to,
+				position: token.position,
 			}
 		}
 
 		return {
 			type: 'unary-expression',
 			operator: token,
-			start: token.position.from,
-			end: token.position.to,
+			position: token.position,
 		}
 	}
 
@@ -468,8 +464,7 @@ export const parseSqfTokens = (
 		return {
 			type: 'block',
 			body,
-			start: token.position.from,
-			end: last.position.to,
+			position: [token.position[0], last.position[1]],
 		}
 	}
 
@@ -545,8 +540,7 @@ export const parseSqfTokens = (
 		return {
 			type: 'array',
 			elements,
-			start: token.position.from,
-			end: tokens[index - 1].position.to,
+			position: [token.position[0], tokens[index - 1].position[1]],
 		}
 	}
 
@@ -566,8 +560,7 @@ export const parseSqfTokens = (
 					? parseFloat(token.contents ?? '')
 					: String(token.contents?.substring(1, token.contents.length - 1)),
 			raw: String(token.contents),
-			start: token.position.from,
-			end: token.position.to,
+			position: token.position,
 		}
 	}
 
@@ -592,8 +585,7 @@ export const parseSqfTokens = (
 			private: isPrivate,
 			id,
 			init: parseExpression(),
-			start: token.position.from,
-			end: next.position.to,
+			position: [token.position[0], next.position[1]],
 		}
 	}
 
@@ -604,8 +596,7 @@ export const parseSqfTokens = (
 		script: {
 			type: 'script',
 			body,
-			start: 0,
-			end: body[body.length - 1]?.end ?? 0,
+			position: [0, body[body.length - 1]?.position[1] ?? 0],
 		} as SqfNode,
 	}
 }

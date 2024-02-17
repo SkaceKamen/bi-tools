@@ -59,7 +59,7 @@ export const analyzeSqf = (
 			case 'assignment': {
 				let comment = undefined as string | undefined
 				const firstToken = sourceTokens.findIndex(
-					(token) => token.position.from === node.start
+					(token) => token.position[0] === node.position[0]
 				)
 				if (firstToken) {
 					const previousToken = sourceTokens[firstToken - 1]
@@ -73,7 +73,7 @@ export const analyzeSqf = (
 
 				const name = node.id.contents
 				getVariable(name).assignments.push({
-					position: [node.start, node.end],
+					position: node.position,
 					comment,
 					type: determineType(node.init),
 				})
@@ -83,7 +83,7 @@ export const analyzeSqf = (
 
 			case 'variable': {
 				const name = node.id.contents
-				getVariable(name).usage.push([node.start, node.end])
+				getVariable(name).usage.push(node.position)
 
 				break
 			}
@@ -96,7 +96,7 @@ export const analyzeSqf = (
 								if (isStringLiteral(item)) {
 									const name = item.value
 									getVariable(name).assignments.push({
-										position: [item.start, item.end],
+										position: item.position,
 										comment: undefined,
 									})
 								} else if (item.type === 'array') {
@@ -104,7 +104,7 @@ export const analyzeSqf = (
 									if (isStringLiteral(firstItem)) {
 										const name = firstItem.value
 										getVariable(name).assignments.push({
-											position: [firstItem.start, firstItem.end],
+											position: firstItem.position,
 											comment: undefined,
 										})
 									}
@@ -121,7 +121,7 @@ export const analyzeSqf = (
 								if (isStringLiteral(item)) {
 									const name = item.value
 									getVariable(name).assignments.push({
-										position: [item.start, item.end],
+										position: item.position,
 										comment: undefined,
 									})
 								}

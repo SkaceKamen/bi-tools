@@ -12,7 +12,7 @@ export const uppercaseGlobalsRule = defineRule({
 			ctx.report({
 				rule: 'uppercase-globals',
 				message: `Global variables should use only uppercase letters.`,
-				position: { start: node.start, end: node.end },
+				position: node.position,
 			})
 		}
 	},
