@@ -18,6 +18,13 @@ export const properCasingRule = defineRule({
 					rule: 'proper-casing',
 					message: `"${operator}" should be "${definition.title}"`,
 					position: node.operator.position,
+					fix: (fixer) => {
+						fixer.replace(
+							node.operator.position[0],
+							node.operator.position[1],
+							definition.title
+						)
+					},
 				})
 			}
 		}

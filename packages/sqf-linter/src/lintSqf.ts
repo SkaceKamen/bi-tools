@@ -4,6 +4,7 @@ import { preferPrivateRule } from './rules/preferPrivateRule'
 import { properCasingRule } from './rules/properCasingRule'
 import { undefinedVariablesRule } from './rules/undefinedVariablesRule'
 import { uppercaseGlobalsRule } from './rules/uppercaseGlobalsRule'
+import { LintIssue, RuleContext } from './types'
 
 export const lintSqf = (node: SqfNode, code: string) => {
 	const rules = [
@@ -14,20 +15,12 @@ export const lintSqf = (node: SqfNode, code: string) => {
 		properCasingRule,
 	]
 
-	const issues = [] as {
-		position: [start: number, end: number]
-		message: string
-		rule: string
-	}[]
+	const issues = [] as LintIssue[]
 
-	const ctx = {
+	const ctx: RuleContext = {
 		sourceCode: code,
 		root: node,
-		report: (data: {
-			position: [start: number, end: number]
-			message: string
-			rule: string
-		}) => {
+		report: (data: LintIssue) => {
 			issues.push(data)
 		},
 	}
