@@ -1,5 +1,6 @@
 import { SourceMapItem } from './preprocess'
 
+// TODO: Seems like this is not reliable
 export const getMappedOffsetAt = (
 	sourceMap: SourceMapItem[],
 	offset: number,
@@ -40,6 +41,15 @@ export const getMappedOffsetAt = (
 
 	const item = sourceMap[mid - 1]
 	const itemIndex = mid - 1
+
+	/*
+	const itemIndex = sourceMap.findIndex((item) => offset > item.offset) - 1
+	const item = sourceMap[itemIndex]
+
+	if (!item) {
+		return { file: defaultFile, offset, itemIndex: null }
+	}
+	*/
 
 	return {
 		offset: item.fileOffset + (offset - item.offset),

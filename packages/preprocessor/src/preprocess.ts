@@ -385,7 +385,7 @@ export const preprocess = async (
 			if (input.slice(internalIndex, internalIndex + 2) === '##') {
 				identifierPrefix += '##'
 				internalIndex += 2
-			} else if (input[internalIndex] === '#') {
+			} else if (input[internalIndex] === '#' && !sourceMapOptions) {
 				identifierPrefix += '#'
 				internalIndex++
 			}
