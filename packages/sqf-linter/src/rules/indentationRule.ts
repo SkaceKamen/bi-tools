@@ -43,7 +43,7 @@ export const indentationRule = defineRule({
 				if (firstNode && indent.length !== targetIndent) {
 					ctx.report({
 						rule: 'indentation',
-						message: `Expected indentation of ${targetIndent}, but got ${indent.length}.`,
+						message: `Expected indentation of ${targetIndent}, but got ${indent.length}`,
 						position: [indent.start, indent.end],
 					})
 				}

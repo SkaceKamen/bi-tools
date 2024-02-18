@@ -1,17 +1,17 @@
 import { defineRule } from '../defineRule'
 
-export const uppercaseGlobalsRule = defineRule({
-	id: 'uppercase-globals',
+export const globalsTagRule = defineRule({
+	id: 'globals-start-with-tag',
 	walk: (node, ctx) => {
 		if (
 			node.type === 'variable' &&
 			!node.id.contents.startsWith('_') &&
 			!node.id.contents.includes('_fnc_') &&
-			node.id.contents.match(/[a-z]/)
+			!node.id.contents.match(/^[A-Z0-9]_?/)
 		) {
 			ctx.report({
-				rule: 'uppercase-globals',
-				message: `Global variables should use only uppercase letters.`,
+				rule: 'globals-start-with-tag',
+				message: `Global variables should start with TAG_`,
 				position: node.position,
 			})
 		}

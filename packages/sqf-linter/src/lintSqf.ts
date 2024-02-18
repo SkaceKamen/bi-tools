@@ -3,12 +3,12 @@ import { indentationRule } from './rules/indentationRule'
 import { preferPrivateRule } from './rules/preferPrivateRule'
 import { properCasingRule } from './rules/properCasingRule'
 import { undefinedVariablesRule } from './rules/undefinedVariablesRule'
-import { uppercaseGlobalsRule } from './rules/uppercaseGlobalsRule'
+import { globalsTagRule } from './rules/globalsTagRule'
 import { LintIssue, RuleContext } from './types'
 
 export const lintSqf = (node: SqfNode, code: string) => {
 	const rules = [
-		uppercaseGlobalsRule,
+		globalsTagRule,
 		undefinedVariablesRule,
 		indentationRule,
 		preferPrivateRule,
