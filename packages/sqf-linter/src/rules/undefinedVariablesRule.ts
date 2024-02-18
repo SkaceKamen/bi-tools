@@ -20,50 +20,85 @@ const parsePrivateArgs = (node: SqfArrayNode) => {
 export const undefinedVariablesRule = defineRule({
 	id: 'undefined-variables',
 	walk(node, ctx) {
-		if (node.type === 'ternary-expression') {
-			if (node.operator.contents === 'params') {
-				if (node.right.type === 'array') {
-					parsePrivateArgs(node.right)
-				}
-			}
-		} else if (node.type === 'binary-expression') {
-			if (node.operator.contents === 'private') {
-				if (
-					node.right.type === 'literal' &&
-					typeof node.right.value === 'string'
-				) {
-					alreadyDefined.add(node.right.value.toLowerCase())
+		switch (node.type) {
+			// Allow to define variable by "// @define <<name>>"
+			case 'script': {
+				const contents = ctx.sourceCode
+
+				const regex = /^\s*(?:\/\/)?\s*@define ([a-zA-Z0-9_]+)/gm
+				while (true) {
+					const match = regex.exec(contents)
+					if (!match) {
+						break
+					}
+
+					console.log('linting match', match[1])
+
+					alreadyDefined.add(match[1].toLowerCase())
 				}
 
-				if (node.right.type === 'array') {
-					for (const item of node.right.elements) {
-						if (item.type === 'literal' && typeof item.value === 'string') {
-							alreadyDefined.add(item.value.toLowerCase())
-						} else if (
-							item.type === 'array' &&
-							item.elements[0]?.type === 'literal' &&
-							typeof item.elements[0].value === 'string'
-						) {
-							alreadyDefined.add(item.elements[0].value.toLowerCase())
+				break
+			}
+
+			case 'ternary-expression': {
+				if (node.operator.contents === 'params') {
+					if (node.right.type === 'array') {
+						parsePrivateArgs(node.right)
+					}
+				}
+				break
+			}
+
+			case 'binary-expression': {
+				if (node.operator.contents === 'private') {
+					if (
+						node.right.type === 'literal' &&
+						typeof node.right.value === 'string'
+					) {
+						alreadyDefined.add(node.right.value.toLowerCase())
+					}
+
+					if (node.right.type === 'array') {
+						for (const item of node.right.elements) {
+							if (item.type === 'literal' && typeof item.value === 'string') {
+								alreadyDefined.add(item.value.toLowerCase())
+							} else if (
+								item.type === 'array' &&
+								item.elements[0]?.type === 'literal' &&
+								typeof item.elements[0].value === 'string'
+							) {
+								alreadyDefined.add(item.elements[0].value.toLowerCase())
+							}
 						}
 					}
 				}
+
+				if (node.operator.contents === 'params') {
+					if (node.right.type === 'array') {
+						parsePrivateArgs(node.right)
+					}
+				}
+
+				break
 			}
 
-			if (node.operator.contents === 'params') {
-				if (node.right.type === 'array') {
-					parsePrivateArgs(node.right)
-				}
+			case 'assignment': {
+				alreadyDefined.add(node.id.contents.toLowerCase())
+				break
 			}
-		} else if (node.type === 'assignment') {
-			alreadyDefined.add(node.id.contents.toLowerCase())
-		} else if (node.type === 'variable' && node.type.startsWith('_')) {
-			if (!alreadyDefined.has(node.id.contents.toLowerCase())) {
-				ctx.report({
-					rule: 'undefined-variables',
-					message: `Variable "${node.id.contents}" is not defined.`,
-					position: node.position,
-				})
+
+			case 'variable': {
+				if (!node.id.contents.startsWith('_')) {
+					break
+				}
+
+				if (!alreadyDefined.has(node.id.contents.toLowerCase())) {
+					ctx.report({
+						rule: 'undefined-variables',
+						message: `Variable "${node.id.contents}" is not defined.`,
+						position: node.position,
+					})
+				}
 			}
 		}
 	},
