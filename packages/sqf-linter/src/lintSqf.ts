@@ -36,7 +36,7 @@ export const lintSqf = ({ root, code, tokens }: Props) => {
 
 	for (const token of tokens) {
 		if (token.type === 'line-comment') {
-			const match = /^\/\/\s*sqf-lint-disable\s*(.+)$/.exec(token.contents)
+			const match = /^\/\/\s*sqflint-disable\s*(.+)$/.exec(token.contents)
 			if (match) {
 				const rules = match[1].split(',')
 				for (const rule of rules) {
@@ -54,6 +54,7 @@ export const lintSqf = ({ root, code, tokens }: Props) => {
 
 	walkSqf(root, (node) => {
 		for (const rule of rules) {
+			// TODO: allow disabling rules for a line
 			if (!disabledRules.has(rule.id)) {
 				rule.walk(node, ctx)
 			}
