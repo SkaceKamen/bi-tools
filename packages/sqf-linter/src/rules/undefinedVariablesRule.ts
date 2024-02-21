@@ -1,7 +1,7 @@
 import { SqfArrayNode } from '@bi-tools/sqf-parser'
 import { defineRule } from '../defineRule'
 
-const alreadyDefined = new Set<string>(['_x', '_foreachindex'])
+const alreadyDefined = new Set<string>()
 
 const parsePrivateArgs = (node: SqfArrayNode) => {
 	for (const item of node.elements) {
@@ -19,23 +19,25 @@ const parsePrivateArgs = (node: SqfArrayNode) => {
 
 export const undefinedVariablesRule = defineRule({
 	id: 'undefined-variables',
+	init() {
+		alreadyDefined.clear()
+		alreadyDefined.add('_x')
+		alreadyDefined.add('_foreachindex')
+	},
 	walk(node, ctx) {
 		switch (node.type) {
 			// Allow to define variable by "// @define <<name>>"
 			case 'script': {
-				const contents = ctx.sourceCode
-
-				const regex = /^\s*(?:\/\/)?\s*@define ([a-zA-Z0-9_]+)/gm
-				while (true) {
-					const match = regex.exec(contents)
-					if (!match) {
-						break
-					}
-
-					console.log('linting match', match[1])
-
-					alreadyDefined.add(match[1].toLowerCase())
-				}
+				ctx.tokens
+					.filter((t) => t.type === 'line-comment')
+					.forEach((token) => {
+						const match = token.contents.match(
+							/\/\/\s*@define\s+([a-zA-Z0-9_]+)/i
+						)
+						if (match) {
+							alreadyDefined.add(match[1].toLowerCase())
+						}
+					})
 
 				break
 			}

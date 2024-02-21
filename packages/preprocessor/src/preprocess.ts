@@ -94,7 +94,7 @@ export const preprocess = async (
 
 	const standardMacros = new Map<string, MacroItem>([
 		['__LINE__', dynamicMacro('__LINE__', () => line.toString())],
-		['__FILE__', dynamicMacro('__FILE__', () => `"${filename}"`)],
+		['__FILE__', dynamicMacro('__FILE__', `"${filename}"`)],
 		// TODO: Define the rest of the macros
 	])
 

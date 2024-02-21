@@ -1,9 +1,10 @@
-import { SqfNode } from '@bi-tools/sqf-parser'
+import { SqfNode, SqfToken } from '@bi-tools/sqf-parser'
 import { Fixer } from './fixer'
 
 export type RuleContext = {
 	sourceCode: string
 	root: SqfNode
+	tokens: SqfToken[]
 	report: (data: LintIssue) => void
 }
 

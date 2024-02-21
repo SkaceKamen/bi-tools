@@ -19,6 +19,9 @@ const parsePrivateArgs = (node: SqfArrayNode) => {
 
 export const preferPrivateRule = defineRule({
 	id: 'prefer-private',
+	init() {
+		alreadyDefined.clear()
+	},
 	walk: (node, ctx) => {
 		// TODO: Doesn't work properly with params [] and private []
 

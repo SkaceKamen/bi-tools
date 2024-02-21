@@ -42,7 +42,11 @@ async function main() {
 	console.log(JSON.stringify(parsed.errors, null, 2))
 
 	console.time('lint')
-	const linerIssues = lintSqf(parsed.script, preprocessed.code)
+	const linerIssues = lintSqf({
+		root: parsed.script,
+		code: preprocessed.code,
+		tokens,
+	})
 	//console.log(stringify(parsed))
 	console.timeEnd('lint')
 

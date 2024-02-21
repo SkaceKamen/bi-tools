@@ -22,23 +22,15 @@ async function main() {
 			})
 			const tokens = tokenizeSqf(preprocessed.code)
 			const parsed = parseSqfTokens(tokens)
-			const lintIssues = lintSqf(parsed.script, preprocessed.code)
+			const lintIssues = lintSqf({
+				root: parsed.script,
+				code: preprocessed.code,
+				tokens,
+			})
 
 			if (lintIssues.length > 0) {
 				console.log(filePath)
 				for (const issue of lintIssues) {
-					const line = contents.split('\n')[issue.position.startLine - 1]
-					const prefix = String(issue.position.startLine).padEnd(4, ' ') + '|'
-					const tabs =
-						line.slice(0, issue.position.startOffset).split('\t').length - 1
-
-					console.log(prefix, line.split('\t').join('  '))
-
-					console.log(
-						' '.repeat(5) +
-							' '.repeat(issue.position.startOffset - tabs + tabs * 2) +
-							'^'.repeat(issue.position.end - issue.position.start)
-					)
 					console.log('   ', issue.message, '(' + issue.rule + ')')
 					console.log('')
 				}

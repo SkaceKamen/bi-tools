@@ -1,12 +1,18 @@
-import { SqfNode, walkSqf } from '@bi-tools/sqf-parser'
+import { SqfNode, SqfToken, walkSqf } from '@bi-tools/sqf-parser'
+import { globalsTagRule } from './rules/globalsTagRule'
 import { indentationRule } from './rules/indentationRule'
 import { preferPrivateRule } from './rules/preferPrivateRule'
 import { properCasingRule } from './rules/properCasingRule'
 import { undefinedVariablesRule } from './rules/undefinedVariablesRule'
-import { globalsTagRule } from './rules/globalsTagRule'
 import { LintIssue, RuleContext } from './types'
 
-export const lintSqf = (node: SqfNode, code: string) => {
+type Props = {
+	root: SqfNode
+	code: string
+	tokens: SqfToken[]
+}
+
+export const lintSqf = ({ root, code, tokens }: Props) => {
 	const rules = [
 		globalsTagRule,
 		undefinedVariablesRule,
@@ -19,15 +25,38 @@ export const lintSqf = (node: SqfNode, code: string) => {
 
 	const ctx: RuleContext = {
 		sourceCode: code,
-		root: node,
+		root,
+		tokens,
 		report: (data: LintIssue) => {
 			issues.push(data)
 		},
 	}
 
-	walkSqf(node, (node) => {
+	const disabledRules = new Set<string>()
+
+	for (const token of tokens) {
+		if (token.type === 'line-comment') {
+			const match = /^\/\/\s*sqf-lint-disable\s*(.+)$/.exec(token.contents)
+			if (match) {
+				const rules = match[1].split(',')
+				for (const rule of rules) {
+					disabledRules.add(rule.trim())
+				}
+			}
+		}
+	}
+
+	for (const rule of rules) {
+		if (!disabledRules.has(rule.id)) {
+			rule.init?.()
+		}
+	}
+
+	walkSqf(root, (node) => {
 		for (const rule of rules) {
-			rule.walk(node, ctx)
+			if (!disabledRules.has(rule.id)) {
+				rule.walk(node, ctx)
+			}
 		}
 	})
 
